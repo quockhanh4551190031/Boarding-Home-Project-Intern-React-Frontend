@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient";
-import type {Amenity, RoomSearchParams, RoomSearchResponse} from "../types/room";
+import type { Amenity, Room, RoomFormData, RoomSearchParams, RoomSearchResponse } from "../types/room";
 
 export const roomApi = {
     search: async (params: RoomSearchParams): Promise<RoomSearchResponse> => {
@@ -21,4 +21,29 @@ export const roomApi = {
       const response = await axiosClient.get<Room>(`/rooms/${id}`);
       return response.data;
     },
+
+    getMine: async (): Promise<Room[]> => {
+      const res = await axiosClient.get<Room[]>("/rooms/mine");
+      return res.data;
+    },
+
+    create: async (data: RoomFormData): Promise<Room> => {
+      const res = await axiosClient.post<Room>("/rooms", data);
+      return res.data;
+    },
+
+    update: async (id: number, data: RoomFormData): Promise<Room> => {
+      const res = await axiosClient.put<Room>(`/rooms/${id}`, data);
+      return res.data;
+    },
+
+    remove: (id: number) => axiosClient.delete(`/rooms/${id}`),
+
+    addImage: async (roomId: number, imageUrl: string, thumbnail: boolean) => {
+      const res = await axiosClient.post(`/rooms/${roomId}/images`, { imageUrl, thumbnail });
+      return res.data;
+    },
+
+    deleteImage: (roomId: number, imageId: number) =>
+      axiosClient.delete(`/rooms/${roomId}/images/${imageId}`),
 };

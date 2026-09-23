@@ -48,3 +48,13 @@ export interface RoomSearchParams {
     page?: number;
     size?: number;
 }
+
+export interface RoomFormData {
+    houseId: number;
+    title: string;
+    price: number;
+    area: number;
+    maxOccupants: number;
+    description: string;
+    amenityIds: number[];
+}

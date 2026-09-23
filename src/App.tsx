@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import ChatPage from "./pages/ChatPage";
 import LandlordHousesPage from "./pages/dashboard/LandlordHousesPage";
+import LandlordRoomsPage from "./pages/dashboard/LandlordRoomsPage";
 
 // Các trang tạm thời — sẽ thay dần ở các bước sau
 function ForumPage() {
@@ -19,9 +20,6 @@ function ProfilePage() {
 }
 function FavoritesPage() {
     return <div className="p-8">Phòng yêu thích (đang phát triển)</div>;
-}
-function LandlordRoomsPage() {
-    return <div>Quản lý phòng trọ (đang phát triển)</div>;
 }
 function AdminStatsPage() {
     return <div>Thống kê hệ thống (đang phát triển)</div>;
