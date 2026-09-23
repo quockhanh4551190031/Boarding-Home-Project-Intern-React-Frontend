@@ -1,5 +1,6 @@
-import { useState, FormEvent } from "react";
+import { useState, useRef } from "react";
 import { roomApi } from "../api/roomApi";
+import { uploadApi } from "../api/uploadApi";
 import type { Room } from "../types/room";
 
 interface Props {
@@ -9,19 +10,30 @@ interface Props {
 }
 
 export default function RoomImageManager({ room, onClose, onUpdated }: Props) {
-  const [url, setUrl] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAdd = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!url.trim()) return;
-    setSaving(true);
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Ảnh vượt quá 5MB, vui lòng chọn ảnh nhỏ hơn");
+      return;
+    }
+
+    setError(null);
+    setUploading(true);
     try {
-      await roomApi.addImage(room.id, url.trim(), room.images.length === 0);
-      setUrl("");
+      const url = await uploadApi.uploadImage(file);
+      await roomApi.addImage(room.id, url, room.images.length === 0);
       onUpdated();
+    } catch {
+      setError("Tải ảnh lên thất bại, thử lại sau");
     } finally {
-      setSaving(false);
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -57,26 +69,26 @@ export default function RoomImageManager({ room, onClose, onUpdated }: Props) {
           )}
         </div>
 
-        <form onSubmit={handleAdd} className="flex gap-2">
-          <input
-            type="url"
-            required
-            placeholder="Dán URL ảnh (https://...)"
-            className="flex-1 border rounded px-3 py-2 text-sm"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm disabled:opacity-50"
-          >
-            Thêm
-          </button>
-        </form>
-        <p className="text-xs text-gray-400 mt-1">
-          Chưa hỗ trợ upload file trực tiếp — dùng link ảnh có sẵn (VD từ Imgur, Google Drive public link).
-        </p>
+        {error && <div className="bg-red-50 text-red-600 text-sm p-2 rounded mb-3">{error}</div>}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          disabled={uploading}
+          className="hidden"
+          id="room-image-input"
+        />
+        <label
+          htmlFor="room-image-input"
+          className={`block text-center border-2 border-dashed rounded-lg py-4 text-sm cursor-pointer ${
+            uploading ? "opacity-50 cursor-not-allowed" : "hover:border-blue-400 hover:bg-blue-50"
+          }`}
+        >
+          {uploading ? "Đang tải lên..." : "📷 Chọn ảnh từ máy tính"}
+        </label>
+        <p className="text-xs text-gray-400 mt-1 text-center">JPG, PNG, tối đa 5MB</p>
 
         <button onClick={onClose} className="mt-4 w-full text-sm border rounded py-2 hover:bg-gray-50">
           Đóng

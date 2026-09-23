@@ -1,6 +1,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import LocationSelect from "./LocationSelect";
 import type { BoardingHouse, HouseFormData } from "../types/house";
+import MapPicker from "./MapPicker";
 
 interface Props {
   house: BoardingHouse | null; // null = tạo mới
@@ -79,29 +80,11 @@ export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
             onChange={(city, ward) => setForm({ ...form, city, ward })}
           />
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Vĩ độ (latitude)</label>
-              <input
-                required type="number" step="any"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={form.latitude || ""}
-                onChange={(e) => setForm({ ...form, latitude: Number(e.target.value) })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Kinh độ (longitude)</label>
-              <input
-                required type="number" step="any"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={form.longitude || ""}
-                onChange={(e) => setForm({ ...form, longitude: Number(e.target.value) })}
-              />
-            </div>
-          </div>
-          <p className="text-xs text-gray-400 -mt-2">
-            Mẹo: mở Google Maps, chuột phải vào vị trí nhà trọ, copy toạ độ (VD: 10.7756, 106.7019)
-          </p>
+          <MapPicker
+            latitude={form.latitude}
+            longitude={form.longitude}
+            onChange={(lat, lng) => setForm({ ...form, latitude: lat, longitude: lng })}
+          />
 
           <div>
             <label className="block text-sm font-medium mb-1">Mô tả</label>
