@@ -1,10 +1,11 @@
 import { useState, FormEvent, useEffect } from "react";
 import LocationSelect from "./LocationSelect";
-import type { BoardingHouse, HouseFormData } from "../types/house";
 import MapPicker from "./MapPicker";
+import { geocodeApi } from "../api/geocodeApi";
+import type { BoardingHouse, HouseFormData } from "../types/house";
 
 interface Props {
-  house: BoardingHouse | null; // null = tạo mới
+  house: BoardingHouse | null;
   onClose: () => void;
   onSubmit: (data: HouseFormData) => Promise<void>;
 }
@@ -17,7 +18,9 @@ const emptyForm: HouseFormData = {
 export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
   const [form, setForm] = useState<HouseFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [geocodeMsg, setGeocodeMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (house) {
@@ -29,6 +32,29 @@ export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
       setForm(emptyForm);
     }
   }, [house]);
+
+  const handleGeocode = async () => {
+    if (!form.address || !form.ward || !form.city) {
+      setGeocodeMsg("Nhập đầy đủ địa chỉ, phường/xã, tỉnh/thành trước khi tìm tọa độ");
+      return;
+    }
+    setGeocoding(true);
+    setGeocodeMsg(null);
+    try {
+      const query = `${form.address}, ${form.ward}, ${form.city}, Việt Nam`;
+      const result = await geocodeApi.search(query);
+      if (result) {
+        setForm((f) => ({ ...f, latitude: result.lat, longitude: result.lng }));
+        setGeocodeMsg("✓ Đã tìm thấy vị trí — kiểm tra lại trên bản đồ, chỉnh tay nếu chưa chính xác");
+      } else {
+        setGeocodeMsg("Không tìm thấy vị trí khớp với địa chỉ này, vui lòng chọn tay trên bản đồ");
+      }
+    } catch {
+      setGeocodeMsg("Lỗi khi tìm tọa độ, thử lại sau hoặc chọn tay trên bản đồ");
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -80,6 +106,18 @@ export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
             onChange={(city, ward) => setForm({ ...form, city, ward })}
           />
 
+          <div>
+            <button
+              type="button"
+              onClick={handleGeocode}
+              disabled={geocoding}
+              className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+            >
+              {geocoding ? "Đang tìm..." : "🔍 Tự động tìm tọa độ từ địa chỉ đã nhập"}
+            </button>
+            {geocodeMsg && <p className="text-xs text-gray-500 mt-1">{geocodeMsg}</p>}
+          </div>
+
           <MapPicker
             latitude={form.latitude}
             longitude={form.longitude}
@@ -97,11 +135,7 @@ export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
           </div>
 
           <div className="flex gap-2 justify-end pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
-            >
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">
               Hủy
             </button>
             <button

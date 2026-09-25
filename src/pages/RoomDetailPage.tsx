@@ -5,6 +5,7 @@ import { favoriteApi } from "../api/favoriteApi";
 import { chatApi } from "../api/chatApi";
 import { useAuthStore } from "../store/authStore";
 import type { Room } from "../types/room";
+import RoomDirectionsMap from "../components/RoomDirectionsMap";
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("vi-VN").format(price) + " đ/tháng";
@@ -181,6 +182,13 @@ export default function RoomDetailPage() {
       >
         {contactLoading ? "Đang kết nối..." : "Nhắn tin cho chủ trọ"}
       </button>
+      <div className="mt-8 pt-8 border-t">
+        <RoomDirectionsMap
+          destLat={room.houseLatitude}
+          destLng={room.houseLongitude}
+          destLabel={room.houseName}
+        />
+      </div>
     </div>
   );
 }

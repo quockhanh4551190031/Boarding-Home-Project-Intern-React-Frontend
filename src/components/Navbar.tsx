@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useState } from "react";
+import LocationPickerModal from "./LocationPickerModal";
 
 export default function Navbar() {
     const navigate = useNavigate();
     const { isAuthenticated, email, role, logout } = useAuthStore();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -23,6 +25,12 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
                     <Link to="/" className="hover:text-blue-600">Tìm phòng</Link>
                     <Link to="/forum" className="hover:text-blue-600">Diễn đàn</Link>
+                    <button
+                      onClick={() => setShowLocationModal(true)}
+                      className="hover:text-blue-600"
+                    >
+                      📍 Định vị
+                    </button>
                     {isAuthenticated && (
                         <Link to="/chat" className="hover:text-blue-600">Tin nhắn</Link>
                     )}
@@ -106,6 +114,9 @@ export default function Navbar() {
                     )}
                 </div>
             </div>
+            {showLocationModal && (
+              <LocationPickerModal onClose={() => setShowLocationModal(false)} />
+            )}
         </nav>
     );
 }

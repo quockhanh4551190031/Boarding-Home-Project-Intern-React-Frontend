@@ -9,6 +9,8 @@ export interface Room {
     houseId: number;
     houseName: string;
     landlordId: number;
+    houseLatitude: number;
+    houseLongitude: number;
     title: string;
     price: number;
     area: number;
