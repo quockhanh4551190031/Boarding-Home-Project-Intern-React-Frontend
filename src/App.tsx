@@ -10,17 +10,12 @@ import RoomDetailPage from "./pages/RoomDetailPage";
 import ChatPage from "./pages/ChatPage";
 import LandlordHousesPage from "./pages/dashboard/LandlordHousesPage";
 import LandlordRoomsPage from "./pages/dashboard/LandlordRoomsPage";
+import ProfilePage from "./pages/ProfilePage";
+import FavoritesPage from "./pages/FavoritesPage";
+import ForumPage from "./pages/ForumPage";
+import PostDetailPage from "./pages/PostDetailPage";
 
 // Các trang tạm thời — sẽ thay dần ở các bước sau
-function ForumPage() {
-    return <div className="p-8">Diễn đàn (đang phát triển)</div>;
-}
-function ProfilePage() {
-    return <div className="p-8">Hồ sơ cá nhân (đang phát triển)</div>;
-}
-function FavoritesPage() {
-    return <div className="p-8">Phòng yêu thích (đang phát triển)</div>;
-}
 function AdminStatsPage() {
     return <div>Thống kê hệ thống (đang phát triển)</div>;
 }
@@ -38,6 +33,7 @@ export default function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/rooms/:id" element={<RoomDetailPage />} />
                     <Route path="/forum" element={<ForumPage />} />
+                    <Route path="/forum/:id" element={<PostDetailPage />} />
 
                     <Route element={<ProtectedRoute />}>
                         <Route path="/profile" element={<ProfilePage />} />
