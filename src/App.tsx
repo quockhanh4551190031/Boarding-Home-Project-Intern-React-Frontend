@@ -8,17 +8,16 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import HomePage from "./pages/HomePage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import ChatPage from "./pages/ChatPage";
-import LandlordHousesPage from "./pages/dashboard/LandlordHousesPage";
+import LandlordHousesPage from "./pages/dashboard/LandLordHousesPage";
 import LandlordRoomsPage from "./pages/dashboard/LandlordRoomsPage";
+import AdminUsersPage from "./pages/dashboard/AdminUsersPage";
+import AdminPostsPage from "./pages/dashboard/AdminPostsPage";
+import AdminReportsPage from "./pages/dashboard/AdminReportsPage";
+import AdminStatsPage from "./pages/dashboard/AdminStatsPage";
 import ProfilePage from "./pages/ProfilePage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ForumPage from "./pages/ForumPage";
 import PostDetailPage from "./pages/PostDetailPage";
-
-// Các trang tạm thời — sẽ thay dần ở các bước sau
-function AdminStatsPage() {
-    return <div>Thống kê hệ thống (đang phát triển)</div>;
-}
 
 export default function App() {
     return (
@@ -54,6 +53,9 @@ export default function App() {
                 <Route element={<RoleProtectedRoute allowedRoles={["ADMIN"]} />}>
                     <Route element={<DashboardLayout />}>
                         <Route path="/dashboard/admin/stats" element={<AdminStatsPage />} />
+                        <Route path="/dashboard/admin/users" element={<AdminUsersPage />} />
+                        <Route path="/dashboard/admin/posts" element={<AdminPostsPage />} />
+                        <Route path="/dashboard/admin/reports" element={<AdminReportsPage />} />
                     </Route>
                 </Route>
 

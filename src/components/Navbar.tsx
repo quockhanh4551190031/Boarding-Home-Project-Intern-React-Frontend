@@ -26,10 +26,10 @@ export default function Navbar() {
                     <Link to="/" className="hover:text-blue-600">Tìm phòng</Link>
                     <Link to="/forum" className="hover:text-blue-600">Diễn đàn</Link>
                     <button
-                      onClick={() => setShowLocationModal(true)}
-                      className="hover:text-blue-600"
+                        onClick={() => setShowLocationModal(true)}
+                        className="hover:text-blue-600"
                     >
-                      📍 Định vị
+                        📍 Định vị
                     </button>
                     {isAuthenticated && (
                         <Link to="/chat" className="hover:text-blue-600">Tin nhắn</Link>
@@ -43,9 +43,9 @@ export default function Navbar() {
                                 onClick={() => setMenuOpen((o) => !o)}
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-sm"
                             >
-                <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                  {email?.charAt(0).toUpperCase()}
-                </span>
+                                <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                                    {email?.charAt(0).toUpperCase()}
+                                </span>
                                 <span className="hidden sm:inline">{email}</span>
                             </button>
 
@@ -78,7 +78,7 @@ export default function Navbar() {
 
                                     {role === "ADMIN" && (
                                         <Link
-                                            to="/dashboard/admin"
+                                            to="/dashboard/admin/stats"
                                             className="block px-4 py-2 hover:bg-gray-50"
                                             onClick={() => setMenuOpen(false)}
                                         >
@@ -115,7 +115,7 @@ export default function Navbar() {
                 </div>
             </div>
             {showLocationModal && (
-              <LocationPickerModal onClose={() => setShowLocationModal(false)} />
+                <LocationPickerModal onClose={() => setShowLocationModal(false)} />
             )}
         </nav>
     );
