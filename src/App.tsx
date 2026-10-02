@@ -18,6 +18,7 @@ import ProfilePage from "./pages/ProfilePage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ForumPage from "./pages/ForumPage";
 import PostDetailPage from "./pages/PostDetailPage";
+import ChatbotWidget from "./components/ChatbotWidget";
 
 export default function App() {
     return (
@@ -61,6 +62,7 @@ export default function App() {
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            <ChatbotWidget />
         </BrowserRouter>
     );
 }
