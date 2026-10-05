@@ -45,6 +45,7 @@ export interface RoomSearchParams {
     minArea?: number;
     maxArea?: number;
     city?: string;
+    ward?: string;
     amenityIds?: number[];
     sortBy?: "PRICE_ASC" | "PRICE_DESC" | "AREA_ASC" | "AREA_DESC" | "NEWEST";
     page?: number;

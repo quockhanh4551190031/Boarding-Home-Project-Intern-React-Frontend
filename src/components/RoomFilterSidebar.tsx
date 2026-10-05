@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { roomApi } from "../api/roomApi";
+import { locationApi } from "../api/houseApi";
 import type { Amenity, RoomSearchParams } from "../types/room";
 
 interface Props {
@@ -9,11 +10,31 @@ interface Props {
 
 export default function RoomFilterSidebar({ filters, onChange }: Props) {
     const [amenities, setAmenities] = useState<Amenity[]>([]);
+    const [provinces, setProvinces] = useState<string[]>([]);
+    const [wards, setWards] = useState<string[]>([]);
+    const [loadingWards, setLoadingWards] = useState(false);
     const [local, setLocal] = useState<RoomSearchParams>(filters);
 
     useEffect(() => {
-        roomApi.getAmenities().then(setAmenities).catch(() => {});
+        roomApi.getAmenities().then(setAmenities).catch(() => { });
+        locationApi.getProvinces().then(setProvinces).catch(() => { });
     }, []);
+
+    useEffect(() => {
+        if (!local.city) {
+            setWards([]);
+            return;
+        }
+        setLoadingWards(true);
+        locationApi
+            .getWards(local.city)
+            .then(setWards)
+            .finally(() => setLoadingWards(false));
+    }, [local.city]);
+
+    const handleCityChange = (city: string) => {
+        setLocal({ ...local, city: city || undefined, ward: undefined });
+    };
 
     const toggleAmenity = (id: number) => {
         const current = local.amenityIds ?? [];
@@ -96,13 +117,33 @@ export default function RoomFilterSidebar({ filters, onChange }: Props) {
 
             <div>
                 <label className="text-sm font-semibold block mb-1">Tỉnh/Thành phố</label>
-                <input
-                    type="text"
-                    placeholder="VD: Thành phố Hồ Chí Minh"
+                <select
                     className="w-full border rounded px-3 py-2 text-sm"
                     value={local.city ?? ""}
-                    onChange={(e) => setLocal({ ...local, city: e.target.value })}
-                />
+                    onChange={(e) => handleCityChange(e.target.value)}
+                >
+                    <option value="">-- Tất cả --</option>
+                    {provinces.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                    ))}
+                </select>
+            </div>
+
+            <div>
+                <label className="text-sm font-semibold block mb-1">Phường/Xã</label>
+                <select
+                    disabled={!local.city || loadingWards}
+                    className="w-full border rounded px-3 py-2 text-sm disabled:bg-gray-100"
+                    value={local.ward ?? ""}
+                    onChange={(e) => setLocal({ ...local, ward: e.target.value || undefined })}
+                >
+                    <option value="">
+                        {!local.city ? "Chọn tỉnh/thành trước" : loadingWards ? "Đang tải..." : "-- Tất cả --"}
+                    </option>
+                    {wards.map((w) => (
+                        <option key={w} value={w}>{w}</option>
+                    ))}
+                </select>
             </div>
 
             {amenities.length > 0 && (
