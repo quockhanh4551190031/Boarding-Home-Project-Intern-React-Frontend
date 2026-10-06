@@ -9,6 +9,7 @@ export interface BoardingHouse {
   description: string;
   status: "ACTIVE" | "HIDDEN" | "DELETED";
   roomCount: number;
+  images: string[];
   createdAt: string;
 }
 

@@ -19,6 +19,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import ForumPage from "./pages/ForumPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import ChatbotWidget from "./components/ChatbotWidget";
+import HouseDetailPage from "./pages/HouseDetailPage";
 
 export default function App() {
     return (
@@ -34,6 +35,7 @@ export default function App() {
                     <Route path="/rooms/:id" element={<RoomDetailPage />} />
                     <Route path="/forum" element={<ForumPage />} />
                     <Route path="/forum/:id" element={<PostDetailPage />} />
+                    <Route path="/houses/:id" element={<HouseDetailPage />} />
 
                     <Route element={<ProtectedRoute />}>
                         <Route path="/profile" element={<ProfilePage />} />

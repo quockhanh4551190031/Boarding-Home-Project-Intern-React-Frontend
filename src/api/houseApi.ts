@@ -2,6 +2,10 @@ import axiosClient from "./axiosClient";
 import type { BoardingHouse, HouseFormData } from "../types/house";
 
 export const houseApi = {
+  getById: async (id: number): Promise<BoardingHouse> => {
+    const res = await axiosClient.get<BoardingHouse>(`/houses/${id}`);
+    return res.data;
+  },
   getMine: async (): Promise<BoardingHouse[]> => {
     const res = await axiosClient.get<BoardingHouse[]>("/houses/mine");
     return res.data;
