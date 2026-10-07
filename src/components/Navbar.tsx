@@ -16,107 +16,95 @@ export default function Navbar() {
     };
 
     return (
-        <nav className="bg-white border-b sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                <Link to="/" className="text-xl font-bold text-blue-600">
-                    BoardingHome
-                </Link>
-
-                <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
-                    <Link to="/" className="hover:text-blue-600">Tìm phòng</Link>
-                    <Link to="/forum" className="hover:text-blue-600">Diễn đàn</Link>
-                    <button
-                        onClick={() => setShowLocationModal(true)}
-                        className="hover:text-blue-600"
-                    >
-                        📍 Định vị
-                    </button>
-                    {isAuthenticated && (
-                        <Link to="/chat" className="hover:text-blue-600">Tin nhắn</Link>
-                    )}
-                </div>
-
-                <div className="relative">
-                    {isAuthenticated ? (
-                        <>
-                            <button
-                                onClick={() => setMenuOpen((o) => !o)}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-sm"
-                            >
-                                <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-                                    {email?.charAt(0).toUpperCase()}
-                                </span>
-                                <span className="hidden sm:inline">{email}</span>
-                            </button>
-
-                            {menuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-1 text-sm">
-                                    <Link
-                                        to="/profile"
-                                        className="block px-4 py-2 hover:bg-gray-50"
-                                        onClick={() => setMenuOpen(false)}
-                                    >
-                                        Hồ sơ cá nhân
-                                    </Link>
-                                    <Link
-                                        to="/favorites"
-                                        className="block px-4 py-2 hover:bg-gray-50"
-                                        onClick={() => setMenuOpen(false)}
-                                    >
-                                        Phòng yêu thích
-                                    </Link>
-
-                                    {role === "LANDLORD" && (
-                                        <Link
-                                            to="/dashboard/houses"
-                                            className="block px-4 py-2 hover:bg-gray-50"
-                                            onClick={() => setMenuOpen(false)}
-                                        >
-                                            Quản lý phòng trọ
-                                        </Link>
-                                    )}
-
-                                    {role === "ADMIN" && (
-                                        <Link
-                                            to="/dashboard/admin/stats"
-                                            className="block px-4 py-2 hover:bg-gray-50"
-                                            onClick={() => setMenuOpen(false)}
-                                        >
-                                            Trang quản trị
-                                        </Link>
-                                    )}
-
-                                    <hr className="my-1" />
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
-                                    >
-                                        Đăng xuất
-                                    </button>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="flex items-center gap-3">
-                            <Link
-                                to="/login"
-                                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                            >
-                                Đăng nhập
-                            </Link>
-                            <Link
-                                to="/register"
-                                className="text-sm font-medium bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700"
-                            >
-                                Đăng ký
-                            </Link>
+        <>
+            <nav className="sticky top-0 z-50 h-16 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant">
+                <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
+                    <Link to="/" className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-sm">
+                            <span className="material-symbols-outlined text-on-primary !text-[20px]">cottage</span>
                         </div>
-                    )}
+                        <div className="flex flex-col leading-none">
+                            <span className="font-bold text-on-surface">BoardingHome</span>
+                            <span className="text-[11px] text-on-surface-variant mt-0.5">Nền tảng tìm trọ</span>
+                        </div>
+                    </Link>
+
+                    <div className="hidden md:flex items-center gap-1 text-sm font-medium">
+                        <Link to="/" className="px-3 py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors">
+                            Tìm phòng
+                        </Link>
+                        <Link to="/forum" className="px-3 py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors">
+                            Diễn đàn
+                        </Link>
+                        <button
+                            onClick={() => setShowLocationModal(true)}
+                            className="px-3 py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors flex items-center gap-1"
+                        >
+                            <span className="material-symbols-outlined !text-[18px]">location_on</span>
+                            Định vị
+                        </button>
+                        {isAuthenticated && (
+                            <Link to="/chat" className="px-3 py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors">
+                                Tin nhắn
+                            </Link>
+                        )}
+                    </div>
+
+                    <div className="relative">
+                        {isAuthenticated ? (
+                            <>
+                                <button
+                                    onClick={() => setMenuOpen((o) => !o)}
+                                    className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-sm transition-colors"
+                                >
+                                    <span className="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold">
+                                        {email?.charAt(0).toUpperCase()}
+                                    </span>
+                                    <span className="hidden sm:inline text-on-surface-variant">{email}</span>
+                                </button>
+
+                                {menuOpen && (
+                                    <div className="absolute right-0 mt-2 w-52 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg py-1.5 text-sm overflow-hidden">
+                                        <Link to="/profile" className="block px-4 py-2 hover:bg-surface-container-low" onClick={() => setMenuOpen(false)}>
+                                            Hồ sơ cá nhân
+                                        </Link>
+                                        <Link to="/favorites" className="block px-4 py-2 hover:bg-surface-container-low" onClick={() => setMenuOpen(false)}>
+                                            Phòng yêu thích
+                                        </Link>
+                                        {role === "LANDLORD" && (
+                                            <Link to="/dashboard/houses" className="block px-4 py-2 hover:bg-surface-container-low" onClick={() => setMenuOpen(false)}>
+                                                Quản lý phòng trọ
+                                            </Link>
+                                        )}
+                                        {role === "ADMIN" && (
+                                            <Link to="/dashboard/admin/stats" className="block px-4 py-2 hover:bg-surface-container-low" onClick={() => setMenuOpen(false)}>
+                                                Trang quản trị
+                                            </Link>
+                                        )}
+                                        <hr className="my-1 border-outline-variant" />
+                                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-error hover:bg-error-container/40">
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Link to="/login" className="px-3 py-1.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-low">
+                                    Đăng nhập
+                                </Link>
+                                <Link to="/register" className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary text-on-primary hover:bg-primary-container">
+                                    Đăng ký
+                                </Link>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
-            {showLocationModal && (
-                <LocationPickerModal onClose={() => setShowLocationModal(false)} />
-            )}
-        </nav>
+
+
+            </nav>
+
+            {showLocationModal && <LocationPickerModal onClose={() => setShowLocationModal(false)} />}
+        </>
     );
 }
