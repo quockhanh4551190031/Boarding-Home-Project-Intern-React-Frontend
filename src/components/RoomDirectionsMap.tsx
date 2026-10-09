@@ -96,20 +96,31 @@ export default function RoomDirectionsMap({ destLat, destLng }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="font-semibold">Vị trí & đường đi</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
+            <span className="material-symbols-outlined !text-[16px]">map</span>
+          </div>
+          <h2 className="font-semibold text-on-surface">Vị trí và đường đi</h2>
+        </div>
+
         <button
           onClick={findRoute}
           disabled={loading}
-          className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="h-9 px-4 bg-primary-container text-on-primary text-sm font-medium rounded-lg hover:bg-primary transition-colors shadow-sm disabled:opacity-60 flex items-center gap-1.5"
         >
-          {loading ? "Đang tìm đường..." : "🧭 Chỉ đường từ vị trí của tôi"}
+          <span className="material-symbols-outlined !text-[18px]">directions</span>
+          {loading ? "Đang tìm đường..." : "Chỉ đường từ vị trí của tôi"}
         </button>
       </div>
 
-      {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+      {error && (
+        <div className="bg-error-container text-on-error-container text-sm px-3 py-2 rounded-lg mb-3">
+          {error}
+        </div>
+      )}
 
-      <div className="rounded-lg overflow-hidden border" style={{ height: 320 }}>
+      <div className="rounded-xl overflow-hidden border border-outline-variant/60" style={{ height: 320 }}>
         <MapContainer center={destination} zoom={15} style={{ height: "100%", width: "100%" }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -118,15 +129,22 @@ export default function RoomDirectionsMap({ destLat, destLng }: Props) {
           <InvalidateSizeOnMount />
           <Marker position={destination} />
           {userPos && <Marker position={userPos} />}
-          {routeCoords.length > 0 && <Polyline positions={routeCoords} color="#2563eb" weight={4} />}
+          {routeCoords.length > 0 && <Polyline positions={routeCoords} color="#4f46e5" weight={5} />}
           <FitBounds positions={boundsPositions} />
         </MapContainer>
       </div>
 
       {distanceKm !== null && durationMin !== null && (
-        <p className="text-sm text-gray-600 mt-2">
-          Khoảng cách: {distanceKm.toFixed(1)} km — Thời gian: {Math.round(durationMin)} phút
-        </p>
+        <div className="flex gap-2 mt-3">
+          <span className="bg-surface-container-low text-on-surface text-sm font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 tabular-nums">
+            <span className="material-symbols-outlined !text-[16px] text-primary">route</span>
+            {distanceKm.toFixed(1)} km
+          </span>
+          <span className="bg-surface-container-low text-on-surface text-sm font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 tabular-nums">
+            <span className="material-symbols-outlined !text-[16px] text-primary">schedule</span>
+            {Math.round(durationMin)} phút
+          </span>
+        </div>
       )}
     </div>
   );

@@ -4,12 +4,21 @@ import { roomApi } from "../api/roomApi";
 import { favoriteApi } from "../api/favoriteApi";
 import { chatApi } from "../api/chatApi";
 import { useAuthStore } from "../store/authStore";
-import type { Room } from "../types/room";
+import ImageGallery from "../components/ImageGallery";
 import RoomDirectionsMap from "../components/RoomDirectionsMap";
+import type { Room } from "../types/room";
 
 function formatPrice(price: number): string {
-  return new Intl.NumberFormat("vi-VN").format(price) + " đ/tháng";
+  return new Intl.NumberFormat("vi-VN").format(price);
 }
+
+const cardCls = "bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm p-5";
+
+const statusStyle: Record<Room["status"], { label: string; cls: string }> = {
+  AVAILABLE: { label: "Còn trống", cls: "bg-emerald-100 text-emerald-700" },
+  RENTED: { label: "Đã cho thuê", cls: "bg-secondary-container text-on-secondary-container" },
+  HIDDEN: { label: "Đã ẩn", cls: "bg-surface-container text-on-surface-variant" },
+};
 
 export default function RoomDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,25 +27,26 @@ export default function RoomDetailPage() {
 
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeImage, setActiveImage] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
   const [contactLoading, setContactLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
+    setLoadError(null);
     roomApi
       .getById(Number(id))
       .then((data) => setRoom(data))
-      .catch(() => setError("Không tìm thấy phòng trọ này"))
+      .catch(() => setLoadError("Không tìm thấy phòng trọ này"))
       .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
     if (!id || !isAuthenticated) return;
-    favoriteApi.checkStatus(Number(id)).then(setIsFavorited).catch(() => {});
+    favoriteApi.checkStatus(Number(id)).then(setIsFavorited).catch(() => { });
   }, [id, isAuthenticated]);
 
   const toggleFavorite = async () => {
@@ -46,6 +56,7 @@ export default function RoomDetailPage() {
     }
     if (!room) return;
     setFavLoading(true);
+    setActionError(null);
     try {
       if (isFavorited) {
         await favoriteApi.remove(room.id);
@@ -55,7 +66,7 @@ export default function RoomDetailPage() {
         setIsFavorited(true);
       }
     } catch {
-      // im lặng bỏ qua, có thể thêm toast báo lỗi sau
+      setActionError("Không thể cập nhật danh sách yêu thích, thử lại sau");
     } finally {
       setFavLoading(false);
     }
@@ -68,126 +79,164 @@ export default function RoomDetailPage() {
     }
     if (!room) return;
     setContactLoading(true);
+    setActionError(null);
     try {
       const chatRoom = await chatApi.createOrGetRoom(room.landlordId, room.id);
       navigate(`/chat?roomId=${chatRoom.id}`);
     } catch {
-      setError("Không thể bắt đầu cuộc trò chuyện, thử lại sau");
+      setActionError("Không thể bắt đầu cuộc trò chuyện, thử lại sau");
     } finally {
       setContactLoading(false);
     }
   };
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto px-4 py-16 text-center text-gray-400">Đang tải...</div>;
-  }
-
-  if (error || !room) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500 mb-4">{error ?? "Không tìm thấy phòng trọ"}</p>
-        <Link to="/" className="text-blue-600 hover:underline">Quay lại trang chủ</Link>
+      <div className="max-w-6xl mx-auto px-4 py-8 animate-pulse">
+        <div className="h-5 w-40 bg-surface-container rounded mb-6" />
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 aspect-video bg-surface-container rounded-xl" />
+          <div className="h-72 bg-surface-container rounded-xl" />
+        </div>
       </div>
     );
   }
 
+  if (loadError || !room) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-16 flex flex-col items-center gap-3 text-center">
+        <span className="material-symbols-outlined !text-[40px] text-outline">error</span>
+        <p className="text-on-surface font-medium">{loadError ?? "Không tìm thấy phòng trọ"}</p>
+        <Link to="/" className="text-primary-container hover:underline text-sm">
+          Quay lại trang chủ
+        </Link>
+      </div>
+    );
+  }
+
+  const status = statusStyle[room.status];
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Gallery ảnh */}
-      <div className="mb-6">
-        <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden">
-          {room.images.length > 0 ? (
-            <img
-              src={room.images[activeImage].imageUrl}
-              alt={room.title}
-              className="w-full h-full object-cover"
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <Link
+        to={`/houses/${room.houseId}`}
+        className="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary-container mb-5"
+      >
+        <span className="material-symbols-outlined !text-[18px]">arrow_back</span>
+        {room.houseName}
+      </Link>
+
+      <div className="grid lg:grid-cols-3 gap-6 items-start">
+        {/* Cột trái: nội dung */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <ImageGallery images={room.images.map((i) => i.imageUrl)} alt={room.title} />
+
+          <section className={cardCls}>
+            <h2 className="font-semibold text-on-surface mb-2">Mô tả</h2>
+            <p className="text-sm text-on-surface-variant whitespace-pre-line leading-relaxed">
+              {room.description || "Chủ trọ chưa thêm mô tả cho phòng này."}
+            </p>
+          </section>
+
+          {room.amenities.length > 0 && (
+            <section className={cardCls}>
+              <h2 className="font-semibold text-on-surface mb-3">Tiện ích</h2>
+              <div className="flex flex-wrap gap-2">
+                {room.amenities.map((a) => (
+                  <span
+                    key={a}
+                    className="bg-primary-fixed text-on-primary-fixed-variant text-xs font-medium px-3 py-1.5 rounded-full"
+                  >
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className={cardCls}>
+            <RoomDirectionsMap
+              destLat={room.houseLatitude}
+              destLng={room.houseLongitude}
+              destLabel={room.houseName}
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              Chưa có ảnh
+          </section>
+        </div>
+
+        {/* Cột phải: card thông tin dính */}
+        <aside className={`${cardCls} lg:sticky lg:top-24 flex flex-col gap-4`}>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-xl font-bold tracking-tight text-on-surface leading-snug">{room.title}</h1>
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${status.cls}`}>
+              {status.label}
+            </span>
+          </div>
+
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-bold text-primary-container tabular-nums">
+              {formatPrice(room.price)}
+            </span>
+            <span className="text-sm text-on-surface-variant">đ/tháng</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-surface-container-low rounded-lg p-3 flex flex-col gap-0.5">
+              <span className="material-symbols-outlined !text-[18px] text-primary">square_foot</span>
+              <span className="font-semibold text-on-surface tabular-nums text-sm">{room.area} m²</span>
+              <span className="text-[11px] text-on-surface-variant">Diện tích</span>
+            </div>
+            <div className="bg-surface-container-low rounded-lg p-3 flex flex-col gap-0.5">
+              <span className="material-symbols-outlined !text-[18px] text-primary">group</span>
+              <span className="font-semibold text-on-surface tabular-nums text-sm">{room.maxOccupants}</span>
+              <span className="text-[11px] text-on-surface-variant">Tối đa</span>
+            </div>
+            <div className="bg-surface-container-low rounded-lg p-3 flex flex-col gap-0.5">
+              <span className="material-symbols-outlined !text-[18px] text-primary">visibility</span>
+              <span className="font-semibold text-on-surface tabular-nums text-sm">{room.viewCount}</span>
+              <span className="text-[11px] text-on-surface-variant">Lượt xem</span>
+            </div>
+          </div>
+
+          {room.distanceKm !== null && (
+            <span className="self-start bg-emerald-100 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+              Cách bạn {room.distanceKm} km
+            </span>
+          )}
+
+          {actionError && (
+            <div className="bg-error-container text-on-error-container text-sm px-3 py-2 rounded-lg">
+              {actionError}
             </div>
           )}
-        </div>
 
-        {room.images.length > 1 && (
-          <div className="flex gap-2 mt-2 overflow-x-auto">
-            {room.images.map((img, idx) => (
-              <button
-                key={img.id}
-                onClick={() => setActiveImage(idx)}
-                className={`w-20 h-16 shrink-0 rounded-lg overflow-hidden border-2 ${
-                  idx === activeImage ? "border-blue-600" : "border-transparent"
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              onClick={handleContact}
+              disabled={contactLoading}
+              className="h-11 bg-primary-container text-on-primary font-medium rounded-lg hover:bg-primary transition-colors shadow-sm disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined !text-[20px]">chat</span>
+              {contactLoading ? "Đang kết nối..." : "Nhắn tin cho chủ trọ"}
+            </button>
+
+            <button
+              onClick={toggleFavorite}
+              disabled={favLoading}
+              className={`h-11 font-medium rounded-lg border transition-colors flex items-center justify-center gap-2 disabled:opacity-60 ${isFavorited
+                ? "bg-error-container/50 text-error border-error/20 hover:bg-error-container"
+                : "bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-surface-container-low"
                 }`}
+            >
+              <span
+                className="material-symbols-outlined !text-[20px]"
+                style={{ fontVariationSettings: `"FILL" ${isFavorited ? 1 : 0}` }}
               >
-                <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Thông tin chính */}
-      <div className="flex items-start justify-between gap-4 mb-2">
-        <h1 className="text-2xl font-bold">{room.title}</h1>
-        <button
-          onClick={toggleFavorite}
-          disabled={favLoading}
-          className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium border ${
-            isFavorited
-              ? "bg-red-50 text-red-600 border-red-200"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-          }`}
-        >
-          {isFavorited ? "♥ Đã lưu" : "♡ Lưu tin"}
-        </button>
-      </div>
-
-      <p className="text-gray-500 mb-4">{room.houseName}</p>
-
-      <div className="flex flex-wrap gap-4 mb-6">
-        <span className="text-2xl font-bold text-blue-600">{formatPrice(room.price)}</span>
-        <span className="text-gray-600 self-center">{room.area} m²</span>
-        <span className="text-gray-600 self-center">Tối đa {room.maxOccupants} người</span>
-        {room.distanceKm !== null && (
-          <span className="text-green-700 bg-green-50 px-2 py-1 rounded-full text-sm self-center">
-            Cách bạn {room.distanceKm} km
-          </span>
-        )}
-      </div>
-
-      {room.amenities.length > 0 && (
-        <div className="mb-6">
-          <h2 className="font-semibold mb-2">Tiện ích</h2>
-          <div className="flex flex-wrap gap-2">
-            {room.amenities.map((a) => (
-              <span key={a} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                {a}
+                favorite
               </span>
-            ))}
+              {isFavorited ? "Đã lưu" : "Lưu tin"}
+            </button>
           </div>
-        </div>
-      )}
-
-      <div className="mb-8">
-        <h2 className="font-semibold mb-2">Mô tả</h2>
-        <p className="text-gray-700 whitespace-pre-line">{room.description}</p>
-      </div>
-
-      {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
-
-      <button
-        onClick={handleContact}
-        disabled={contactLoading}
-        className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
-      >
-        {contactLoading ? "Đang kết nối..." : "Nhắn tin cho chủ trọ"}
-      </button>
-      <div className="mt-8 pt-8 border-t">
-        <RoomDirectionsMap
-          destLat={room.houseLatitude}
-          destLng={room.houseLongitude}
-          destLabel={room.houseName}
-        />
+        </aside>
       </div>
     </div>
   );
