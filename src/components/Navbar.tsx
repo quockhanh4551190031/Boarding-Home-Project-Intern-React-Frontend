@@ -55,7 +55,7 @@ export default function Navbar() {
                             <>
                                 <button
                                     onClick={() => setMenuOpen((o) => !o)}
-                                    className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-sm transition-colors"
+                                    className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container text-sm transition-colors cursor-pointer"
                                 >
                                     <span className="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold">
                                         {email?.charAt(0).toUpperCase()}
@@ -82,7 +82,7 @@ export default function Navbar() {
                                             </Link>
                                         )}
                                         <hr className="my-1 border-outline-variant" />
-                                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-error hover:bg-error-container/40">
+                                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-error hover:bg-error-container/40 cursor-pointer">
                                             Đăng xuất
                                         </button>
                                     </div>

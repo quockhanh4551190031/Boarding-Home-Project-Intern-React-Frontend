@@ -8,6 +8,10 @@ interface Props {
     onChange: (filters: RoomSearchParams) => void;
 }
 
+const inputCls =
+    "w-full h-10 px-3 bg-surface-container-low focus:bg-surface-container-lowest rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed";
+const labelCls = "text-sm font-medium text-on-surface block mb-1.5";
+
 export default function RoomFilterSidebar({ filters, onChange }: Props) {
     const [amenities, setAmenities] = useState<Amenity[]>([]);
     const [provinces, setProvinces] = useState<string[]>([]);
@@ -38,15 +42,11 @@ export default function RoomFilterSidebar({ filters, onChange }: Props) {
 
     const toggleAmenity = (id: number) => {
         const current = local.amenityIds ?? [];
-        const next = current.includes(id)
-            ? current.filter((a) => a !== id)
-            : [...current, id];
+        const next = current.includes(id) ? current.filter((a) => a !== id) : [...current, id];
         setLocal({ ...local, amenityIds: next });
     };
 
-    const handleApply = () => {
-        onChange({ ...local, page: 0 });
-    };
+    const handleApply = () => onChange({ ...local, page: 0 });
 
     const handleReset = () => {
         const cleared: RoomSearchParams = { page: 0, size: 12, sortBy: "NEWEST" };
@@ -54,124 +54,134 @@ export default function RoomFilterSidebar({ filters, onChange }: Props) {
         onChange(cleared);
     };
 
+    const num = (v: string) => (v ? Number(v) : undefined);
+
     return (
-        <aside className="w-64 shrink-0 bg-white rounded-xl border p-4 space-y-5 h-fit">
-            <div>
-                <label className="text-sm font-semibold block mb-1">Từ khóa</label>
-                <input
-                    type="text"
-                    placeholder="Tên phòng, khu vực..."
-                    className="w-full border rounded px-3 py-2 text-sm"
-                    value={local.keyword ?? ""}
-                    onChange={(e) => setLocal({ ...local, keyword: e.target.value })}
-                />
+        <aside className="w-full lg:w-72 shrink-0 bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm p-5 flex flex-col gap-5">
+            <div className="flex items-center gap-2 select-none">
+                <div className="w-7 h-7 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
+                    <span className="material-symbols-outlined !text-[16px]">tune</span>
+                </div>
+                <h2 className="font-semibold text-on-surface">Bộ lọc</h2>
             </div>
 
             <div>
-                <label className="text-sm font-semibold block mb-1">Khoảng giá (đ/tháng)</label>
+                <label className={`${labelCls} select-none`}>Từ khóa</label>
+                <div className="relative">
+                    <span className="material-symbols-outlined !text-[18px] absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                        search
+                    </span>
+                    <input
+                        type="text"
+                        placeholder="Tên phòng, khu vực..."
+                        className={`${inputCls} pl-9`}
+                        value={local.keyword ?? ""}
+                        onChange={(e) => setLocal({ ...local, keyword: e.target.value })}
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label className={`${labelCls} select-none`}>Khoảng giá (đ/tháng)</label>
                 <div className="flex gap-2">
                     <input
                         type="number"
                         placeholder="Từ"
-                        className="w-1/2 border rounded px-2 py-2 text-sm"
+                        className={`${inputCls} tabular-nums`}
                         value={local.minPrice ?? ""}
-                        onChange={(e) =>
-                            setLocal({ ...local, minPrice: e.target.value ? Number(e.target.value) : undefined })
-                        }
+                        onChange={(e) => setLocal({ ...local, minPrice: num(e.target.value) })}
                     />
                     <input
                         type="number"
                         placeholder="Đến"
-                        className="w-1/2 border rounded px-2 py-2 text-sm"
+                        className={`${inputCls} tabular-nums`}
                         value={local.maxPrice ?? ""}
-                        onChange={(e) =>
-                            setLocal({ ...local, maxPrice: e.target.value ? Number(e.target.value) : undefined })
-                        }
+                        onChange={(e) => setLocal({ ...local, maxPrice: num(e.target.value) })}
                     />
                 </div>
             </div>
 
             <div>
-                <label className="text-sm font-semibold block mb-1">Diện tích (m²)</label>
+                <label className={`${labelCls} select-none`}>Diện tích (m²)</label>
                 <div className="flex gap-2">
                     <input
                         type="number"
                         placeholder="Từ"
-                        className="w-1/2 border rounded px-2 py-2 text-sm"
+                        className={`${inputCls} tabular-nums`}
                         value={local.minArea ?? ""}
-                        onChange={(e) =>
-                            setLocal({ ...local, minArea: e.target.value ? Number(e.target.value) : undefined })
-                        }
+                        onChange={(e) => setLocal({ ...local, minArea: num(e.target.value) })}
                     />
                     <input
                         type="number"
                         placeholder="Đến"
-                        className="w-1/2 border rounded px-2 py-2 text-sm"
+                        className={`${inputCls} tabular-nums`}
                         value={local.maxArea ?? ""}
-                        onChange={(e) =>
-                            setLocal({ ...local, maxArea: e.target.value ? Number(e.target.value) : undefined })
-                        }
+                        onChange={(e) => setLocal({ ...local, maxArea: num(e.target.value) })}
                     />
                 </div>
             </div>
 
             <div>
-                <label className="text-sm font-semibold block mb-1">Tỉnh/Thành phố</label>
-                <select
-                    className="w-full border rounded px-3 py-2 text-sm"
-                    value={local.city ?? ""}
-                    onChange={(e) => handleCityChange(e.target.value)}
-                >
-                    <option value="">-- Tất cả --</option>
+                <label className={`${labelCls} select-none`}>Tỉnh/Thành phố</label>
+                <select className={inputCls} value={local.city ?? ""} onChange={(e) => handleCityChange(e.target.value)}>
+                    <option value="">Tất cả</option>
                     {provinces.map((p) => (
-                        <option key={p} value={p}>{p}</option>
+                        <option key={p} value={p}>
+                            {p}
+                        </option>
                     ))}
                 </select>
             </div>
 
             <div>
-                <label className="text-sm font-semibold block mb-1">Phường/Xã</label>
+                <label className={`${labelCls} select-none`}>Phường/Xã</label>
                 <select
                     disabled={!local.city || loadingWards}
-                    className="w-full border rounded px-3 py-2 text-sm disabled:bg-gray-100"
+                    className={inputCls}
                     value={local.ward ?? ""}
                     onChange={(e) => setLocal({ ...local, ward: e.target.value || undefined })}
                 >
                     <option value="">
-                        {!local.city ? "Chọn tỉnh/thành trước" : loadingWards ? "Đang tải..." : "-- Tất cả --"}
+                        {!local.city ? "Chọn tỉnh/thành trước" : loadingWards ? "Đang tải..." : "Tất cả"}
                     </option>
                     {wards.map((w) => (
-                        <option key={w} value={w}>{w}</option>
+                        <option key={w} value={w}>
+                            {w}
+                        </option>
                     ))}
                 </select>
             </div>
 
             {amenities.length > 0 && (
                 <div>
-                    <label className="text-sm font-semibold block mb-1">Tiện ích</label>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {amenities.map((a) => (
-                            <label key={a.id} className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={local.amenityIds?.includes(a.id) ?? false}
-                                    onChange={() => toggleAmenity(a.id)}
-                                />
-                                {a.name}
-                            </label>
-                        ))}
+                    <label className={`${labelCls} select-none`}>Tiện ích</label>
+                    <div className="flex flex-wrap gap-2">
+                        {amenities.map((a) => {
+                            const active = local.amenityIds?.includes(a.id) ?? false;
+                            return (
+                                <button
+                                    key={a.id}
+                                    type="button"
+                                    onClick={() => toggleAmenity(a.id)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${active
+                                        ? "bg-primary-container text-on-primary shadow-sm"
+                                        : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"
+                                        }`}
+                                >
+                                    {a.name}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
 
             <div>
-                <label className="text-sm font-semibold block mb-1">Sắp xếp</label>
+                <label className={`${labelCls} select-none`}>Sắp xếp</label>
                 <select
-                    className="w-full border rounded px-3 py-2 text-sm"
+                    className={inputCls}
                     value={local.sortBy ?? "NEWEST"}
-                    onChange={(e) =>
-                        setLocal({ ...local, sortBy: e.target.value as RoomSearchParams["sortBy"] })
-                    }
+                    onChange={(e) => setLocal({ ...local, sortBy: e.target.value as RoomSearchParams["sortBy"] })}
                 >
                     <option value="NEWEST">Mới nhất</option>
                     <option value="PRICE_ASC">Giá thấp đến cao</option>
@@ -181,16 +191,16 @@ export default function RoomFilterSidebar({ filters, onChange }: Props) {
                 </select>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-1">
                 <button
                     onClick={handleApply}
-                    className="flex-1 bg-blue-600 text-white text-sm py-2 rounded hover:bg-blue-700"
+                    className="flex-1 h-10 bg-primary-container text-on-primary text-sm font-medium rounded-lg hover:bg-primary transition-colors shadow-sm cursor-pointer"
                 >
                     Áp dụng
                 </button>
                 <button
                     onClick={handleReset}
-                    className="px-3 text-sm border rounded hover:bg-gray-50"
+                    className="h-10 px-4 bg-surface-container-lowest border border-outline-variant text-on-surface-variant text-sm font-medium rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer"
                 >
                     Xóa lọc
                 </button>

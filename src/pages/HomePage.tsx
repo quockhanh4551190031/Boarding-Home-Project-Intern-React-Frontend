@@ -2,16 +2,8 @@ import { useEffect, useState } from "react";
 import { roomApi } from "../api/roomApi";
 import type { Room, RoomSearchParams } from "../types/room";
 import HouseCard from "../components/HouseCard";
+import type { HouseGroup } from "../components/HouseCard";
 import RoomFilterSidebar from "../components/RoomFilterSidebar";
-
-interface HouseGroup {
-    houseId: number;
-    houseName: string;
-    thumbnail: string | null;
-    roomCount: number;
-    minPrice: number;
-    maxPrice: number;
-}
 
 function groupByHouse(rooms: Room[]): HouseGroup[] {
     const map = new Map<number, HouseGroup>();
@@ -35,6 +27,18 @@ function groupByHouse(rooms: Room[]): HouseGroup[] {
         }
     }
     return Array.from(map.values());
+}
+
+function SkeletonCard() {
+    return (
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm overflow-hidden animate-pulse">
+            <div className="aspect-video bg-surface-container" />
+            <div className="p-4 space-y-2">
+                <div className="h-4 bg-surface-container rounded w-3/4" />
+                <div className="h-4 bg-surface-container rounded w-1/2" />
+            </div>
+        </div>
+    );
 }
 
 export default function HomePage() {
@@ -64,32 +68,63 @@ export default function HomePage() {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold mb-1">Tìm nhà trọ</h1>
-            <p className="text-gray-500 text-sm mb-6">{totalElements} phòng đang cho thuê, nhóm theo nhà trọ</p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-primary">Khám phá</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                        <span className="text-xs text-on-surface-variant">Cập nhật theo thời gian thực</span>
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-on-surface">Tìm nhà trọ</h1>
+                    <p className="text-sm text-on-surface-variant max-w-xl">
+                        Duyệt nhà trọ theo khu vực, mức giá và tiện ích — xem ảnh, bản đồ và chọn đúng phòng bạn cần.
+                    </p>
+                </div>
 
-            <div className="flex gap-6">
+                <div className="bg-surface-container-lowest shadow-sm rounded-xl px-4 py-2.5 flex items-center gap-3 self-start md:self-auto select-none">
+                    <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+                        <span className="material-symbols-outlined !text-[18px]">meeting_room</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-xs text-on-surface-variant">Phòng đang cho thuê</span>
+                        <span className="font-bold text-on-surface tabular-nums">{totalElements}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
                 <RoomFilterSidebar filters={filters} onChange={setFilters} />
 
-                <div className="flex-1">
+                <div className="flex-1 w-full">
                     {loading ? (
-                        <div className="text-center py-16 text-gray-400">Đang tải...</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {Array.from({ length: 6 }, (_, i) => (
+                                <SkeletonCard key={i} />
+                            ))}
+                        </div>
                     ) : houses.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">Không tìm thấy nhà trọ nào phù hợp</div>
+                        <div className="bg-surface-container-lowest rounded-xl shadow-sm py-16 flex flex-col items-center gap-2 text-on-surface-variant select-none">
+                            <span className="material-symbols-outlined !text-[40px] text-outline">search_off</span>
+                            <p className="font-medium text-on-surface">Không tìm thấy nhà trọ phù hợp</p>
+                            <p className="text-sm">Thử nới rộng bộ lọc hoặc bấm "Xóa lọc"</p>
+                        </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {houses.map((h) => (
                                     <HouseCard key={h.houseId} house={h} />
                                 ))}
                             </div>
 
                             {totalPages > 1 && (
-                                <div className="flex justify-center gap-2 mt-8">
+                                <div className="flex justify-center gap-1.5 mt-8">
                                     {Array.from({ length: totalPages }, (_, i) => (
                                         <button
                                             key={i}
                                             onClick={() => goToPage(i)}
-                                            className={`w-9 h-9 rounded-lg text-sm font-medium ${i === filters.page ? "bg-blue-600 text-white" : "bg-white border hover:bg-gray-50"
+                                            className={`w-9 h-9 rounded-lg text-sm font-medium tabular-nums transition-colors ${i === filters.page
+                                                ? "bg-primary-container text-on-primary shadow-sm"
+                                                : "bg-surface-container-lowest border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container-low"
                                                 }`}
                                         >
                                             {i + 1}
