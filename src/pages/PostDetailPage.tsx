@@ -3,9 +3,16 @@ import type { FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { forumApi } from "../api/forumApi";
 import { useAuthStore } from "../store/authStore";
+import Avatar from "../components/ui/Avatar";
 import ReportModal from "../components/ReportModal";
+import { alertErrorCls, btnPrimary, inputCls } from "../components/ui/styles";
 import { timeAgo } from "../utils/time";
 import type { ForumComment, ForumPost, ReportTargetType } from "../types/forum";
+
+const FILLED = '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20';
+const cardCls = "bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm p-6";
+const ghostBtn =
+  "h-8 px-2.5 rounded-lg text-sm font-medium inline-flex items-center gap-1 transition-colors";
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +27,11 @@ export default function PostDetailPage() {
   const [input, setInput] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: number; name: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [reportTarget, setReportTarget] = useState<{ type: ReportTargetType; id: number; label: string } | null>(null);
+  const [reportTarget, setReportTarget] = useState<{
+    type: ReportTargetType;
+    id: number;
+    label: string;
+  } | null>(null);
 
   const loadAll = useCallback(async () => {
     const [p, c] = await Promise.all([forumApi.getPost(postId), forumApi.getComments(postId)]);
@@ -47,6 +58,7 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (!post || !requireLogin()) return;
+    setError(null);
     try {
       const liked = await forumApi.toggleLike(post.id);
       setPost({ ...post, likedByMe: liked, likeCount: post.likeCount + (liked ? 1 : -1) });
@@ -57,6 +69,7 @@ export default function PostDetailPage() {
 
   const handleDeletePost = async () => {
     if (!post || !confirm("Xóa bài viết này?")) return;
+    setError(null);
     try {
       await forumApi.deletePost(post.id);
       navigate("/forum");
@@ -68,6 +81,7 @@ export default function PostDetailPage() {
   const handleSubmitComment = async (e: FormEvent) => {
     e.preventDefault();
     if (!requireLogin() || !input.trim()) return;
+    setError(null);
     setSubmitting(true);
     try {
       await forumApi.addComment(postId, input.trim(), replyTo?.id);
@@ -83,6 +97,7 @@ export default function PostDetailPage() {
 
   const handleDeleteComment = async (commentId: number) => {
     if (!confirm("Xóa bình luận này? Các trả lời bên dưới cũng sẽ bị xóa.")) return;
+    setError(null);
     try {
       await forumApi.deleteComment(commentId);
       await loadAll();
@@ -103,14 +118,22 @@ export default function PostDetailPage() {
   };
 
   if (loading) {
-    return <div className="max-w-3xl mx-auto px-4 py-16 text-center text-gray-400">Đang tải...</div>;
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8 animate-pulse">
+        <div className="h-4 w-24 bg-surface-container rounded mb-5" />
+        <div className="h-64 bg-surface-container rounded-xl" />
+      </div>
+    );
   }
 
   if (!post) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500 mb-4">{error ?? "Không tìm thấy bài viết"}</p>
-        <Link to="/forum" className="text-blue-600 hover:underline">Quay lại diễn đàn</Link>
+      <div className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center gap-3 text-center">
+        <span className="material-symbols-outlined !text-[40px] text-outline">error</span>
+        <p className="text-on-surface font-medium">{error ?? "Không tìm thấy bài viết"}</p>
+        <Link to="/forum" className="text-primary-container hover:underline text-sm">
+          Quay lại diễn đàn
+        </Link>
       </div>
     );
   }
@@ -122,26 +145,30 @@ export default function PostDetailPage() {
   const renderComment = (c: ForumComment, isReply: boolean) => {
     const name = c.userFullName ?? c.userEmail;
     return (
-      <div key={c.id} className={isReply ? "ml-10 mt-3" : "mt-4"}>
+      <div key={c.id} className={isReply ? "ml-11 mt-3" : "mt-5"}>
         <div className="flex gap-3">
-          <span className="w-8 h-8 shrink-0 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold">
-            {name.charAt(0).toUpperCase()}
-          </span>
-          <div className="flex-1">
-            <div className="bg-gray-50 rounded-xl px-3 py-2">
-              <p className="text-sm font-medium">{name}</p>
-              <p className="text-sm text-gray-700 whitespace-pre-line">{c.content}</p>
+          <Avatar name={name} size="sm" tone="muted" />
+          <div className="flex-1 min-w-0">
+            <div className="bg-surface-container-low rounded-xl px-3.5 py-2.5">
+              <p className="text-sm font-semibold text-on-surface">{name}</p>
+              <p className="text-sm text-on-surface-variant whitespace-pre-line break-words">
+                {c.content}
+              </p>
             </div>
-            <div className="flex gap-3 mt-1 ml-1 text-xs text-gray-400">
+            <div className="flex items-center gap-3 mt-1 ml-1 text-xs text-on-surface-variant">
               <span>{timeAgo(c.createdAt)}</span>
-              <button onClick={() => startReply(c)} className="hover:text-blue-600">Trả lời</button>
+              <button onClick={() => startReply(c)} className="font-medium hover:text-primary-container">
+                Trả lời
+              </button>
               {canModify(c.userEmail) && (
-                <button onClick={() => handleDeleteComment(c.id)} className="hover:text-red-600">Xóa</button>
+                <button onClick={() => handleDeleteComment(c.id)} className="font-medium hover:text-error">
+                  Xóa
+                </button>
               )}
               {email !== c.userEmail && (
                 <button
                   onClick={() => openReport("COMMENT", c.id, c.content)}
-                  className="hover:text-red-600"
+                  className="font-medium hover:text-error"
                 >
                   Báo cáo
                 </button>
@@ -155,68 +182,103 @@ export default function PostDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link to="/forum" className="text-sm text-blue-600 hover:underline">← Quay lại diễn đàn</Link>
+      <Link
+        to="/forum"
+        className="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary-container mb-5"
+      >
+        <span className="material-symbols-outlined !text-[18px]">arrow_back</span>
+        Diễn đàn
+      </Link>
 
-      {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded mt-4">{error}</div>}
+      {error && <div className={`${alertErrorCls} mb-4`}>{error}</div>}
 
-      <article className="bg-white border rounded-xl p-6 mt-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <span className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-              {author.charAt(0).toUpperCase()}
-            </span>
-            <div>
-              <p className="text-sm font-medium">{author}</p>
-              <p className="text-xs text-gray-400">{timeAgo(post.createdAt)}</p>
+      <article className={cardCls}>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar name={author} size="lg" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-on-surface truncate">{author}</p>
+              <p className="text-xs text-on-surface-variant">{timeAgo(post.createdAt)}</p>
             </div>
           </div>
 
-          <div className="flex gap-3 text-sm">
+          <div className="flex gap-1 shrink-0">
             {canModify(post.userEmail) && (
-              <button onClick={handleDeletePost} className="text-red-600 hover:underline">Xóa bài</button>
+              <button
+                onClick={handleDeletePost}
+                className={`${ghostBtn} text-error hover:bg-error-container/40`}
+              >
+                <span className="material-symbols-outlined !text-[18px]">delete</span>
+                Xóa bài
+              </button>
             )}
             {email !== post.userEmail && (
               <button
                 onClick={() => openReport("POST", post.id, post.title)}
-                className="text-gray-500 hover:text-red-600"
+                className={`${ghostBtn} text-on-surface-variant hover:bg-surface-container-low`}
               >
+                <span className="material-symbols-outlined !text-[18px]">flag</span>
                 Báo cáo
               </button>
             )}
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold mb-3">{post.title}</h1>
-        <p className="text-gray-700 whitespace-pre-line">{post.content}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-on-surface mb-3">{post.title}</h1>
+        <p className="text-on-surface-variant whitespace-pre-line leading-relaxed break-words">
+          {post.content}
+        </p>
 
         {post.sharedRoomId && (
           <Link
             to={`/rooms/${post.sharedRoomId}`}
-            className="inline-block mt-4 text-sm bg-blue-50 text-blue-700 px-4 py-2 rounded-full hover:bg-blue-100"
+            className="mt-4 inline-flex items-center gap-1.5 bg-primary-fixed text-on-primary-fixed-variant text-sm font-medium px-4 py-2 rounded-full hover:opacity-80 transition-opacity"
           >
-            🏠 Xem phòng được chia sẻ: {post.sharedRoomTitle}
+            <span className="material-symbols-outlined !text-[18px]">home</span>
+            Xem phòng được chia sẻ: {post.sharedRoomTitle}
           </Link>
         )}
 
-        <div className="flex items-center gap-5 mt-5 pt-4 border-t text-sm">
+        <div className="flex items-center gap-2 mt-5 pt-4 border-t border-outline-variant/40">
           <button
             onClick={handleLike}
-            className={post.likedByMe ? "text-red-600 font-medium" : "text-gray-500 hover:text-red-600"}
+            className={`h-9 px-4 rounded-lg text-sm font-medium inline-flex items-center gap-1.5 transition-colors ${post.likedByMe
+              ? "text-error bg-error-container/40"
+              : "text-on-surface-variant hover:bg-surface-container-low"
+              }`}
           >
-            {post.likedByMe ? "♥" : "♡"} {post.likeCount} lượt thích
+            <span
+              className="material-symbols-outlined !text-[18px]"
+              style={post.likedByMe ? { fontVariationSettings: FILLED } : undefined}
+            >
+              favorite
+            </span>
+            <span className="tabular-nums">{post.likeCount}</span> lượt thích
           </button>
-          <span className="text-gray-500">💬 {post.commentCount} bình luận</span>
+          <span className="text-sm text-on-surface-variant inline-flex items-center gap-1.5">
+            <span className="material-symbols-outlined !text-[18px]">chat_bubble</span>
+            <span className="tabular-nums">{post.commentCount}</span> bình luận
+          </span>
         </div>
       </article>
 
-      <section className="bg-white border rounded-xl p-6 mt-4">
-        <h2 className="font-semibold mb-2">Bình luận</h2>
+      <section className={`${cardCls} mt-4`}>
+        <h2 className="font-semibold text-on-surface mb-4 flex items-center gap-2">
+          Bình luận
+          <span className="bg-surface-container-low text-on-surface-variant text-xs font-medium px-2 py-0.5 rounded-full tabular-nums">
+            {comments.length}
+          </span>
+        </h2>
 
-        <form onSubmit={handleSubmitComment} className="mb-2">
+        <form onSubmit={handleSubmitComment}>
           {replyTo && (
-            <div className="flex items-center justify-between text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-t-lg">
-              <span>Đang trả lời {replyTo.name}</span>
-              <button type="button" onClick={() => setReplyTo(null)} className="hover:underline">Hủy</button>
+            <div className="flex items-center justify-between bg-primary-fixed/60 text-on-primary-fixed-variant text-xs px-3 py-1.5 rounded-lg mb-2">
+              <span>
+                Đang trả lời <strong>{replyTo.name}</strong>
+              </span>
+              <button type="button" onClick={() => setReplyTo(null)} className="font-medium hover:underline">
+                Hủy
+              </button>
             </div>
           )}
           <div className="flex gap-2">
@@ -224,21 +286,26 @@ export default function PostDetailPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={isAuthenticated ? "Viết bình luận..." : "Đăng nhập để bình luận"}
-              onFocus={() => !isAuthenticated && navigate("/login")}
-              className={`flex-1 border px-4 py-2 text-sm ${replyTo ? "rounded-b-lg" : "rounded-full"}`}
+              onFocus={() => {
+                if (!isAuthenticated) navigate("/login");
+              }}
+              className={inputCls}
             />
             <button
               type="submit"
               disabled={submitting || !input.trim()}
-              className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-medium disabled:opacity-50"
+              className={`${btnPrimary} shrink-0`}
             >
+              <span className="material-symbols-outlined !text-[18px]">send</span>
               Gửi
             </button>
           </div>
         </form>
 
         {topLevel.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4">Chưa có bình luận nào.</p>
+          <p className="text-sm text-on-surface-variant py-6 text-center">
+            Chưa có bình luận nào. Hãy là người đầu tiên.
+          </p>
         ) : (
           topLevel.map((c) => (
             <div key={c.id}>
@@ -253,7 +320,9 @@ export default function PostDetailPage() {
         <ReportModal
           title={reportTarget.label}
           onClose={() => setReportTarget(null)}
-          onSubmit={(reason) => forumApi.report(reportTarget.type, reportTarget.id, reason).then(() => {})}
+          onSubmit={(reason) =>
+            forumApi.report(reportTarget.type, reportTarget.id, reason).then(() => { })
+          }
         />
       )}
     </div>

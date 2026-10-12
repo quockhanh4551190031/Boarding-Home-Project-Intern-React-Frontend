@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { alertErrorCls } from "./ui/styles";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-// Dùng CDN thay vì import cục bộ — tránh lỗi Vite bundling marker icon của Leaflet
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -49,13 +49,13 @@ function InvalidateSizeOnMount() {
 function describeGeoError(err: GeolocationPositionError): string {
   switch (err.code) {
     case err.PERMISSION_DENIED:
-      return "Bạn đã từ chối quyền định vị — vào cài đặt trình duyệt để cấp lại quyền cho localhost:5173";
+      return "Bạn đã từ chối quyền định vị. Vào cài đặt trình duyệt để cấp lại quyền cho trang này.";
     case err.POSITION_UNAVAILABLE:
-      return "Không xác định được vị trí — kiểm tra GPS/kết nối mạng của thiết bị";
+      return "Không xác định được vị trí. Kiểm tra GPS hoặc kết nối mạng của thiết bị.";
     case err.TIMEOUT:
-      return "Lấy vị trí quá thời gian chờ, thử lại";
+      return "Lấy vị trí quá thời gian chờ, thử lại.";
     default:
-      return "Không lấy được vị trí, thử lại sau";
+      return "Không lấy được vị trí, thử lại sau.";
   }
 }
 
@@ -65,25 +65,21 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
   const hasPosition = latitude !== 0 && longitude !== 0;
   const center: [number, number] = hasPosition ? [latitude, longitude] : DEFAULT_CENTER;
 
-  const useMyLocation = () => {
+  const handleLocate = () => {
     if (!navigator.geolocation) {
-      console.warn("[MapPicker] Trình duyệt không hỗ trợ navigator.geolocation");
       setGeoError("Trình duyệt của bạn không hỗ trợ định vị");
       return;
     }
-
     setLocating(true);
     setGeoError(null);
-    console.log("[MapPicker] Bắt đầu gọi getCurrentPosition...");
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        console.log("[MapPicker] Lấy vị trí thành công:", pos.coords.latitude, pos.coords.longitude);
         onChange(pos.coords.latitude, pos.coords.longitude);
         setLocating(false);
       },
       (err) => {
-        console.error("[MapPicker] Lỗi getCurrentPosition — code:", err.code, "message:", err.message);
+        console.error("[MapPicker] getCurrentPosition lỗi:", err.code, err.message);
         setGeoError(describeGeoError(err));
         setLocating(false);
       },
@@ -93,22 +89,30 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-sm font-medium">Vị trí trên bản đồ</label>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-sm font-medium text-on-surface">Vị trí trên bản đồ</label>
         <button
           type="button"
-          onClick={useMyLocation}
+          onClick={handleLocate}
           disabled={locating}
-          className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+          className="text-xs font-medium text-primary-container hover:underline disabled:opacity-60 inline-flex items-center gap-1"
         >
-          {locating ? "Đang định vị..." : "📍 Dùng vị trí hiện tại"}
+          <span className="material-symbols-outlined !text-[16px]">my_location</span>
+          {locating ? "Đang định vị..." : "Dùng vị trí hiện tại"}
         </button>
       </div>
 
-      {geoError && <p className="text-xs text-red-600 mb-2">{geoError}</p>}
+      {geoError && <div className={`${alertErrorCls} text-xs mb-2`}>{geoError}</div>}
 
-      <div className="rounded-lg overflow-hidden border" style={{ height: 280 }}>
-        <MapContainer center={center} zoom={hasPosition ? 16 : 6} style={{ height: "100%", width: "100%" }}>
+      <div
+        className="isolate rounded-xl overflow-hidden border border-outline-variant/60"
+        style={{ height: 280 }}
+      >
+        <MapContainer
+          center={center}
+          zoom={hasPosition ? 16 : 6}
+          style={{ height: "100%", width: "100%" }}
+        >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -124,14 +128,15 @@ export default function MapPicker({ latitude, longitude, onChange }: Props) {
         </MapContainer>
       </div>
 
-      <p className="text-xs text-gray-400 mt-1">
-        Bấm vào bản đồ để chọn vị trí chính xác, hoặc dùng "Vị trí hiện tại" nếu bạn đang ở tại nhà trọ.
+      <p className="text-xs text-on-surface-variant mt-1.5">
+        Bấm vào bản đồ để chọn vị trí chính xác.
+        {hasPosition && (
+          <span className="tabular-nums">
+            {" "}
+            Tọa độ: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+          </span>
+        )}
       </p>
-      {hasPosition && (
-        <p className="text-xs text-gray-500 mt-1">
-          Tọa độ: {latitude.toFixed(6)}, {longitude.toFixed(6)}
-        </p>
-      )}
     </div>
   );
 }

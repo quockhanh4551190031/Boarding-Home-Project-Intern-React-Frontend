@@ -1,11 +1,15 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import Modal from "./ui/Modal";
+import { btnDanger, btnPrimary, btnSecondary, labelCls, textareaCls } from "./ui/styles";
 
 interface Props {
   title: string;
   onClose: () => void;
   onSubmit: (reason: string) => Promise<void>;
 }
+
+const quickReasons = ["Spam / quảng cáo", "Lừa đảo", "Nội dung không phù hợp", "Thông tin sai sự thật"];
 
 export default function ReportModal({ title, onClose, onSubmit }: Props) {
   const [reason, setReason] = useState("");
@@ -15,6 +19,7 @@ export default function ReportModal({ title, onClose, onSubmit }: Props) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!reason.trim()) return;
     setError(null);
     setSending(true);
     try {
@@ -28,47 +33,80 @@ export default function ReportModal({ title, onClose, onSubmit }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-md p-6">
-        <h2 className="text-lg font-bold mb-1">Báo cáo vi phạm</h2>
-        <p className="text-sm text-gray-500 mb-4 line-clamp-1">{title}</p>
-
-        {done ? (
+    <Modal
+      title="Báo cáo vi phạm"
+      subtitle={title}
+      icon="flag"
+      size="sm"
+      onClose={onClose}
+      footer={
+        done ? (
+          <button type="button" onClick={onClose} className={btnPrimary}>
+            Đóng
+          </button>
+        ) : (
           <>
-            <p className="text-green-700 bg-green-50 text-sm p-3 rounded mb-4">
-              Đã gửi báo cáo. Cảm ơn bạn, quản trị viên sẽ xem xét sớm.
-            </p>
-            <button onClick={onClose} className="w-full border rounded py-2 text-sm hover:bg-gray-50">
-              Đóng
+            {error && <p className="flex-1 text-sm text-error">{error}</p>}
+            <button type="button" onClick={onClose} className={btnSecondary}>
+              Hủy
+            </button>
+            <button
+              type="submit"
+              form="report-form"
+              disabled={sending || !reason.trim()}
+              className={btnDanger}
+            >
+              {sending ? "Đang gửi..." : "Gửi báo cáo"}
             </button>
           </>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {error && <div className="bg-red-50 text-red-600 text-sm p-2 rounded">{error}</div>}
+        )
+      }
+    >
+      {done ? (
+        <div className="flex flex-col items-center text-center gap-2 py-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <span className="material-symbols-outlined !text-[28px]">check</span>
+          </div>
+          <p className="font-semibold text-on-surface">Đã gửi báo cáo</p>
+          <p className="text-sm text-on-surface-variant">Cảm ơn bạn. Quản trị viên sẽ xem xét sớm.</p>
+        </div>
+      ) : (
+        <form id="report-form" onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <div>
+            <label className={labelCls}>Lý do báo cáo</label>
+            <div className="flex flex-wrap gap-2">
+              {quickReasons.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setReason(r)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${reason === r
+                    ? "bg-primary-container text-on-primary shadow-sm"
+                    : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"
+                    }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <textarea
               required
               rows={4}
               maxLength={255}
-              placeholder="Mô tả lý do báo cáo (spam, lừa đảo, nội dung không phù hợp...)"
-              className="w-full border rounded px-3 py-2 text-sm"
+              placeholder="Mô tả thêm chi tiết (tối đa 255 ký tự)..."
+              className={textareaCls}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
-            <div className="flex gap-2 justify-end">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">
-                Hủy
-              </button>
-              <button
-                type="submit"
-                disabled={sending}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
-              >
-                {sending ? "Đang gửi..." : "Gửi báo cáo"}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+            <p className="text-xs text-on-surface-variant text-right mt-1 tabular-nums">
+              {reason.length}/255
+            </p>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }

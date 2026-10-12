@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Avatar from "./ui/Avatar";
 import type { ForumPost } from "../types/forum";
 import { timeAgo } from "../utils/time";
 
@@ -7,44 +8,64 @@ interface Props {
   onLike: (post: ForumPost) => void;
 }
 
+const FILLED = '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20';
+
 export default function PostCard({ post, onLike }: Props) {
   const author = post.userFullName ?? post.userEmail;
 
   return (
-    <article className="bg-white border rounded-xl p-5">
+    <article className="bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm hover:shadow-md transition-shadow p-5">
       <div className="flex items-center gap-3 mb-3">
-        <span className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
-          {author.charAt(0).toUpperCase()}
-        </span>
-        <div>
-          <p className="text-sm font-medium">{author}</p>
-          <p className="text-xs text-gray-400">{timeAgo(post.createdAt)}</p>
+        <Avatar name={author} />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-on-surface truncate">{author}</p>
+          <p className="text-xs text-on-surface-variant">{timeAgo(post.createdAt)}</p>
         </div>
       </div>
 
-      <Link to={`/forum/${post.id}`} className="block">
-        <h2 className="font-semibold text-lg mb-1 hover:text-blue-600">{post.title}</h2>
-        <p className="text-gray-600 text-sm line-clamp-3 whitespace-pre-line">{post.content}</p>
+      <Link to={`/forum/${post.id}`} className="group block">
+        <h2 className="font-semibold text-lg tracking-tight text-on-surface group-hover:text-primary-container transition-colors">
+          {post.title}
+        </h2>
+        <p className="text-sm text-on-surface-variant line-clamp-3 whitespace-pre-line mt-1">
+          {post.content}
+        </p>
       </Link>
 
       {post.sharedRoomId && (
         <Link
           to={`/rooms/${post.sharedRoomId}`}
-          className="inline-block mt-3 text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-100"
+          className="mt-3 inline-flex items-center gap-1.5 bg-primary-fixed text-on-primary-fixed-variant text-xs font-medium px-3 py-1.5 rounded-full hover:opacity-80 transition-opacity"
         >
-          🏠 Phòng được chia sẻ: {post.sharedRoomTitle}
+          <span className="material-symbols-outlined !text-[16px]">home</span>
+          Phòng được chia sẻ: {post.sharedRoomTitle}
         </Link>
       )}
 
-      <div className="flex items-center gap-4 mt-4 pt-3 border-t text-sm">
+      <div className="flex items-center gap-1 mt-4 pt-3 border-t border-outline-variant/40">
         <button
+          type="button"
           onClick={() => onLike(post)}
-          className={post.likedByMe ? "text-red-600 font-medium" : "text-gray-500 hover:text-red-600"}
+          className={`h-8 px-3 rounded-lg text-sm font-medium inline-flex items-center gap-1.5 transition-colors ${post.likedByMe
+            ? "text-error bg-error-container/40"
+            : "text-on-surface-variant hover:bg-surface-container-low"
+            }`}
         >
-          {post.likedByMe ? "♥" : "♡"} {post.likeCount}
+          <span
+            className="material-symbols-outlined !text-[18px]"
+            style={post.likedByMe ? { fontVariationSettings: FILLED } : undefined}
+          >
+            favorite
+          </span>
+          <span className="tabular-nums">{post.likeCount}</span>
         </button>
-        <Link to={`/forum/${post.id}`} className="text-gray-500 hover:text-blue-600">
-          💬 {post.commentCount}
+
+        <Link
+          to={`/forum/${post.id}`}
+          className="h-8 px-3 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-low inline-flex items-center gap-1.5 transition-colors"
+        >
+          <span className="material-symbols-outlined !text-[18px]">chat_bubble</span>
+          <span className="tabular-nums">{post.commentCount}</span>
         </Link>
       </div>
     </article>

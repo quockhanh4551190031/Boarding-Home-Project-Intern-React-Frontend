@@ -42,6 +42,9 @@
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
+
+    --color-inverse-surface: #283044;
+    --color-inverse-on-surface: #eef0ff;
 }
 
 body {

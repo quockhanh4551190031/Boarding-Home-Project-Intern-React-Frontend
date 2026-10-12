@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import Modal from "./ui/Modal";
 import { favoriteApi } from "../api/favoriteApi";
+import { btnPrimary, btnSecondary, inputCls, labelCls, textareaCls } from "./ui/styles";
 import type { Favorite } from "../types/favorite";
 import type { PostFormData } from "../types/forum";
 
@@ -16,7 +18,7 @@ export default function CreatePostModal({ onClose, onSubmit }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    favoriteApi.getMine().then(setFavorites).catch(() => {});
+    favoriteApi.getMine().then(setFavorites).catch(() => { });
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -34,73 +36,77 @@ export default function CreatePostModal({ onClose, onSubmit }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-        <h2 className="text-lg font-bold mb-4">Đăng bài mới</h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded">{error}</div>}
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Tiêu đề</label>
-            <input
-              required
-              maxLength={200}
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-            />
+    <Modal
+      title="Đăng bài mới"
+      subtitle="Chia sẻ kinh nghiệm thuê trọ với cộng đồng"
+      icon="edit_square"
+      onClose={onClose}
+      footer={
+        <>
+          {error && <p className="flex-1 text-sm text-error">{error}</p>}
+          <button type="button" onClick={onClose} className={btnSecondary}>
+            Hủy
+          </button>
+          <button type="submit" form="post-form" disabled={saving} className={btnPrimary}>
+            {saving ? "Đang đăng..." : "Đăng bài"}
+          </button>
+        </>
+      }
+    >
+      <form id="post-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-on-surface">Tiêu đề</label>
+            <span className="text-xs text-on-surface-variant tabular-nums">{form.title.length}/200</span>
           </div>
+          <input
+            required
+            maxLength={200}
+            className={inputCls}
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Nội dung</label>
-            <textarea
-              required
-              rows={6}
-              className="w-full border rounded px-3 py-2 text-sm"
-              placeholder="Chia sẻ kinh nghiệm thuê trọ, hỏi đáp, review khu vực..."
-              value={form.content}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-            />
-          </div>
+        <div>
+          <label className={labelCls}>Nội dung</label>
+          <textarea
+            required
+            rows={6}
+            className={textareaCls}
+            placeholder="Chia sẻ kinh nghiệm thuê trọ, hỏi đáp, review khu vực..."
+            value={form.content}
+            onChange={(e) => setForm({ ...form, content: e.target.value })}
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Chia sẻ kèm một phòng <span className="text-gray-400 font-normal">(không bắt buộc)</span>
-            </label>
-            <select
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={form.sharedRoomId ?? ""}
-              onChange={(e) =>
-                setForm({ ...form, sharedRoomId: e.target.value ? Number(e.target.value) : null })
-              }
-            >
-              <option value="">-- Không chia sẻ phòng --</option>
-              {favorites.map((f) => (
-                <option key={f.room.id} value={f.room.id}>
-                  {f.room.title} — {f.room.houseName}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-400 mt-1">
-              Danh sách lấy từ các phòng bạn đã lưu yêu thích.
-            </p>
-          </div>
-
-          <div className="flex gap-2 justify-end pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? "Đang đăng..." : "Đăng bài"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div>
+          <label className={labelCls}>
+            Chia sẻ kèm một phòng{" "}
+            <span className="font-normal text-on-surface-variant">(không bắt buộc)</span>
+          </label>
+          <select
+            disabled={favorites.length === 0}
+            className={inputCls}
+            value={form.sharedRoomId ?? ""}
+            onChange={(e) =>
+              setForm({ ...form, sharedRoomId: e.target.value ? Number(e.target.value) : null })
+            }
+          >
+            <option value="">Không chia sẻ phòng</option>
+            {favorites.map((f) => (
+              <option key={f.room.id} value={f.room.id}>
+                {f.room.title} · {f.room.houseName}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-on-surface-variant mt-1.5">
+            {favorites.length === 0
+              ? "Bạn chưa lưu phòng nào. Lưu phòng yêu thích để chia sẻ kèm bài đăng."
+              : "Danh sách lấy từ các phòng bạn đã lưu yêu thích."}
+          </p>
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -1,56 +1,64 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import Modal from "./ui/Modal";
 import LocationSelect from "./LocationSelect";
 import MapPicker from "./MapPicker";
 import { geocodeApi } from "../api/geocodeApi";
+import { btnPrimary, btnSecondary, inputCls, labelCls, textareaCls } from "./ui/styles";
 import type { BoardingHouse, HouseFormData } from "../types/house";
 
 interface Props {
-  house: BoardingHouse | null;
+  house: BoardingHouse | null; // null = tạo mới
   onClose: () => void;
   onSubmit: (data: HouseFormData) => Promise<void>;
 }
 
 const emptyForm: HouseFormData = {
-  name: "", address: "", ward: "", city: "",
-  latitude: 0, longitude: 0, description: "",
+  name: "",
+  address: "",
+  ward: "",
+  city: "",
+  latitude: 0,
+  longitude: 0,
+  description: "",
 };
 
 export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
-  const [form, setForm] = useState<HouseFormData>(emptyForm);
+  const [form, setForm] = useState<HouseFormData>(() =>
+    house
+      ? {
+        name: house.name,
+        address: house.address,
+        ward: house.ward,
+        city: house.city,
+        latitude: house.latitude,
+        longitude: house.longitude,
+        description: house.description ?? "",
+      }
+      : emptyForm
+  );
   const [saving, setSaving] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [geocodeMsg, setGeocodeMsg] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (house) {
-      setForm({
-        name: house.name, address: house.address, ward: house.ward, city: house.city,
-        latitude: house.latitude, longitude: house.longitude, description: house.description,
-      });
-    } else {
-      setForm(emptyForm);
-    }
-  }, [house]);
+  const [geoNote, setGeoNote] = useState<{ ok: boolean; text: string } | null>(null);
 
   const handleGeocode = async () => {
     if (!form.address || !form.ward || !form.city) {
-      setGeocodeMsg("Nhập đầy đủ địa chỉ, phường/xã, tỉnh/thành trước khi tìm tọa độ");
+      setGeoNote({ ok: false, text: "Nhập đủ địa chỉ, tỉnh/thành và phường/xã trước khi tìm tọa độ" });
       return;
     }
     setGeocoding(true);
-    setGeocodeMsg(null);
+    setGeoNote(null);
     try {
-      const query = `${form.address}, ${form.ward}, ${form.city}, Việt Nam`;
-      const result = await geocodeApi.search(query);
+      const result = await geocodeApi.search(`${form.address}, ${form.ward}, ${form.city}, Việt Nam`);
       if (result) {
         setForm((f) => ({ ...f, latitude: result.lat, longitude: result.lng }));
-        setGeocodeMsg("✓ Đã tìm thấy vị trí — kiểm tra lại trên bản đồ, chỉnh tay nếu chưa chính xác");
+        setGeoNote({ ok: true, text: "Đã tìm thấy vị trí. Kiểm tra lại trên bản đồ, bấm vào bản đồ để chỉnh nếu lệch." });
       } else {
-        setGeocodeMsg("Không tìm thấy vị trí khớp với địa chỉ này, vui lòng chọn tay trên bản đồ");
+        setGeoNote({ ok: false, text: "Không tìm thấy vị trí khớp địa chỉ này, hãy chọn tay trên bản đồ." });
       }
     } catch {
-      setGeocodeMsg("Lỗi khi tìm tọa độ, thử lại sau hoặc chọn tay trên bản đồ");
+      setGeoNote({ ok: false, text: "Lỗi khi tìm tọa độ, thử lại sau hoặc chọn tay trên bản đồ." });
     } finally {
       setGeocoding(false);
     }
@@ -59,6 +67,12 @@ export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (form.latitude === 0 && form.longitude === 0) {
+      setError("Chưa chọn vị trí. Hãy bấm vào bản đồ hoặc dùng nút tự động tìm tọa độ.");
+      return;
+    }
+
     setSaving(true);
     try {
       await onSubmit(form);
@@ -71,83 +85,87 @@ export default function HouseFormModal({ house, onClose, onSubmit }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-        <h2 className="text-lg font-bold mb-4">
-          {house ? "Sửa nhà trọ" : "Thêm nhà trọ mới"}
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded">{error}</div>}
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Tên nhà trọ</label>
-            <input
-              required
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Địa chỉ chi tiết (số nhà, đường)</label>
-            <input
-              required
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-            />
-          </div>
-
-          <LocationSelect
-            province={form.city}
-            ward={form.ward}
-            onChange={(city, ward) => setForm({ ...form, city, ward })}
+    <Modal
+      title={house ? "Sửa nhà trọ" : "Thêm nhà trọ mới"}
+      subtitle={house ? house.name : "Điền thông tin và chọn vị trí trên bản đồ"}
+      icon="home_work"
+      size="lg"
+      onClose={onClose}
+      footer={
+        <>
+          {error && <p className="flex-1 text-sm text-error">{error}</p>}
+          <button type="button" onClick={onClose} className={btnSecondary}>
+            Hủy
+          </button>
+          <button type="submit" form="house-form" disabled={saving} className={btnPrimary}>
+            {saving ? "Đang lưu..." : "Lưu"}
+          </button>
+        </>
+      }
+    >
+      <form id="house-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div>
+          <label className={labelCls}>Tên nhà trọ</label>
+          <input
+            required
+            className={inputCls}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
+        </div>
 
-          <div>
-            <button
-              type="button"
-              onClick={handleGeocode}
-              disabled={geocoding}
-              className="text-sm text-blue-600 hover:underline disabled:opacity-50"
-            >
-              {geocoding ? "Đang tìm..." : "🔍 Tự động tìm tọa độ từ địa chỉ đã nhập"}
-            </button>
-            {geocodeMsg && <p className="text-xs text-gray-500 mt-1">{geocodeMsg}</p>}
-          </div>
-
-          <MapPicker
-            latitude={form.latitude}
-            longitude={form.longitude}
-            onChange={(lat, lng) => setForm({ ...form, latitude: lat, longitude: lng })}
+        <div>
+          <label className={labelCls}>
+            Địa chỉ chi tiết{" "}
+            <span className="font-normal text-on-surface-variant">(số nhà, tên đường)</span>
+          </label>
+          <input
+            required
+            className={inputCls}
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
           />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Mô tả</label>
-            <textarea
-              rows={3}
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-            />
-          </div>
+        <LocationSelect
+          province={form.city}
+          ward={form.ward}
+          onChange={(city, ward) => setForm({ ...form, city, ward })}
+        />
 
-          <div className="flex gap-2 justify-end pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm border rounded hover:bg-gray-50">
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? "Đang lưu..." : "Lưu"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={handleGeocode}
+            disabled={geocoding}
+            className="self-start h-9 px-3 text-sm font-medium text-primary-container bg-primary-fixed/60 hover:bg-primary-fixed rounded-lg inline-flex items-center gap-1.5 disabled:opacity-60 transition-colors"
+          >
+            <span className="material-symbols-outlined !text-[18px]">travel_explore</span>
+            {geocoding ? "Đang tìm..." : "Tự động tìm tọa độ từ địa chỉ"}
+          </button>
+          {geoNote && (
+            <p className={`text-xs ${geoNote.ok ? "text-emerald-700" : "text-on-surface-variant"}`}>
+              {geoNote.text}
+            </p>
+          )}
+        </div>
+
+        <MapPicker
+          latitude={form.latitude}
+          longitude={form.longitude}
+          onChange={(lat, lng) => setForm((f) => ({ ...f, latitude: lat, longitude: lng }))}
+        />
+
+        <div>
+          <label className={labelCls}>Mô tả</label>
+          <textarea
+            rows={3}
+            className={textareaCls}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }

@@ -120,7 +120,7 @@ export default function RoomDirectionsMap({ destLat, destLng }: Props) {
         </div>
       )}
 
-      <div className="rounded-xl overflow-hidden border border-outline-variant/60" style={{ height: 320 }}>
+      <div className="isolate rounded-xl overflow-hidden border border-outline-variant/60" style={{ height: 320 }}>
         <MapContainer center={destination} zoom={15} style={{ height: "100%", width: "100%" }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
