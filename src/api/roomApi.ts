@@ -51,4 +51,9 @@ export const roomApi = {
     const res = await axiosClient.get<Room[]>(`/rooms/house/${houseId}`);
     return res.data;
   },
+
+  updateStatus: async (id: number, status: Room["status"]): Promise<Room> => {
+    const res = await axiosClient.put<Room>(`/rooms/${id}/status`, { status });
+    return res.data;
+  },
 };

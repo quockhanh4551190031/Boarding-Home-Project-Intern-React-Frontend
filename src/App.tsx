@@ -8,7 +8,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import HomePage from "./pages/HomePage";
 import RoomDetailPage from "./pages/RoomDetailPage";
 import ChatPage from "./pages/ChatPage";
-import LandlordHousesPage from "./pages/dashboard/LandLordHousesPage";
+import LandlordHousesPage from "./pages/dashboard/LandlordHousesPage";
 import LandlordRoomsPage from "./pages/dashboard/LandlordRoomsPage";
 import AdminUsersPage from "./pages/dashboard/AdminUsersPage";
 import AdminPostsPage from "./pages/dashboard/AdminPostsPage";

@@ -1,15 +1,50 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminApi } from "../../api/adminApi";
+import Badge from "../../components/ui/Badge";
+import type { BadgeTone } from "../../components/ui/Badge";
+import PageHeader from "../../components/ui/PageHeader";
+import Pager from "../../components/ui/Pager";
+import Segmented from "../../components/ui/Segmented";
+import TableSkeleton from "../../components/ui/TableSkeleton";
+import {
+    alertErrorCls,
+    btnSmPrimary,
+    btnSmSecondary,
+    tableCardCls,
+    thCls,
+} from "../../components/ui/styles";
+import { timeAgo } from "../../utils/time";
 import type { AdminReport, ReportStatus } from "../../types/admin";
 
-const statusLabel: Record<ReportStatus, string> = { PENDING: "Chờ xử lý", RESOLVED: "Đã xử lý", REJECTED: "Đã từ chối" };
-const statusColor: Record<ReportStatus, string> = {
-    PENDING: "bg-amber-50 text-amber-700",
-    RESOLVED: "bg-green-50 text-green-700",
-    REJECTED: "bg-gray-100 text-gray-500",
+const PAGE_SIZE = 20;
+
+type Filter = "" | ReportStatus;
+
+const filterOptions: { value: Filter; label: string }[] = [
+    { value: "PENDING", label: "Chờ xử lý" },
+    { value: "RESOLVED", label: "Đã xử lý" },
+    { value: "REJECTED", label: "Đã từ chối" },
+    { value: "", label: "Tất cả" },
+];
+
+const statusLabel: Record<ReportStatus, string> = {
+    PENDING: "Chờ xử lý",
+    RESOLVED: "Đã xử lý",
+    REJECTED: "Đã từ chối",
 };
-const targetLabel: Record<string, string> = { ROOM: "Phòng trọ", POST: "Bài đăng", COMMENT: "Bình luận", USER: "Người dùng" };
+const statusTone: Record<ReportStatus, BadgeTone> = {
+    PENDING: "warning",
+    RESOLVED: "success",
+    REJECTED: "neutral",
+};
+
+const targetLabel: Record<string, string> = {
+    ROOM: "Phòng trọ",
+    POST: "Bài đăng",
+    COMMENT: "Bình luận",
+    USER: "Người dùng",
+};
 
 function targetLink(type: string, id: number): string | null {
     if (type === "ROOM") return `/rooms/${id}`;
@@ -19,98 +54,161 @@ function targetLink(type: string, id: number): string | null {
 
 export default function AdminReportsPage() {
     const [reports, setReports] = useState<AdminReport[]>([]);
-    const [status, setStatus] = useState<ReportStatus | "">("PENDING");
+    const [filter, setFilter] = useState<Filter>("PENDING");
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [busyId, setBusyId] = useState<number | null>(null);
 
-    const load = () => {
+    useEffect(() => {
+        let cancelled = false;
         setLoading(true);
+        setError(null);
         adminApi
-            .getReports({ status: status || undefined, page: 0, size: 50 })
-            .then(setReports)
-            .finally(() => setLoading(false));
-    };
-
-    useEffect(load, [status]);
+            .getReports({ status: filter || undefined, page, size: PAGE_SIZE })
+            .then((res) => {
+                if (cancelled) return;
+                setReports(res);
+                setHasMore(res.length === PAGE_SIZE);
+            })
+            .catch(() => {
+                if (!cancelled) setError("Không tải được danh sách báo cáo");
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [filter, page]);
 
     const resolve = async (id: number, next: ReportStatus) => {
-        const updated = await adminApi.updateReportStatus(id, next);
-        setReports((prev) => prev.map((r) => (r.id === id ? updated : r)));
+        setError(null);
+        setBusyId(id);
+        try {
+            const updated = await adminApi.updateReportStatus(id, next);
+            setReports((prev) =>
+                filter && updated.status !== filter
+                    ? prev.filter((r) => r.id !== id)
+                    : prev.map((r) => (r.id === id ? updated : r))
+            );
+        } catch {
+            setError("Không thể cập nhật báo cáo, thử lại sau");
+        } finally {
+            setBusyId(null);
+        }
     };
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-xl font-bold">Báo cáo vi phạm</h1>
-                <select
-                    className="border rounded px-3 py-2 text-sm"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as ReportStatus | "")}
-                >
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="PENDING">Chờ xử lý</option>
-                    <option value="RESOLVED">Đã xử lý</option>
-                    <option value="REJECTED">Đã từ chối</option>
-                </select>
-            </div>
+            <PageHeader
+                eyebrow="Quản trị"
+                note="Kiểm duyệt"
+                title="Báo cáo vi phạm"
+                description="Xem xét các báo cáo từ người dùng và đánh dấu kết quả xử lý."
+                actions={
+                    <Segmented
+                        options={filterOptions}
+                        value={filter}
+                        onChange={(v) => {
+                            setFilter(v);
+                            setPage(0);
+                        }}
+                    />
+                }
+            />
 
-            {loading ? (
-                <p className="text-gray-400">Đang tải...</p>
-            ) : reports.length === 0 ? (
-                <p className="text-gray-400">Không có report nào</p>
-            ) : (
-                <div className="bg-white border rounded-xl overflow-hidden">
-                    <table className="w-full text-sm">
-                        <thead className="bg-gray-50 text-gray-500 text-left">
+            {error && <div className={`${alertErrorCls} mb-4`}>{error}</div>}
+
+            <div className={tableCardCls}>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[820px]">
+                        <thead className="bg-surface-container-low select-none">
                             <tr>
-                                <th className="px-4 py-2">Người báo cáo</th>
-                                <th className="px-4 py-2">Đối tượng</th>
-                                <th className="px-4 py-2">Lý do</th>
-                                <th className="px-4 py-2">Trạng thái</th>
-                                <th className="px-4 py-2"></th>
+                                <th className={`${thCls} text-left`}>Người báo cáo</th>
+                                <th className={`${thCls} text-left`}>Đối tượng</th>
+                                <th className={`${thCls} text-left`}>Lý do</th>
+                                <th className={`${thCls} text-left`}>Thời gian</th>
+                                <th className={`${thCls} text-left`}>Trạng thái</th>
+                                <th className={`${thCls} text-right`}>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {reports.map((r) => {
-                                const link = targetLink(r.targetType, r.targetId);
-                                return (
-                                    <tr key={r.id} className="border-t align-top">
-                                        <td className="px-4 py-2">{r.reporterEmail}</td>
-                                        <td className="px-4 py-2">
-                                            {targetLabel[r.targetType] ?? r.targetType} #{r.targetId}
-                                            {link && (
-                                                <>
-                                                    {" — "}
-                                                    <Link to={link} target="_blank" className="text-blue-600 hover:underline">
-                                                        Xem
-                                                    </Link>
-                                                </>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-2 max-w-xs">{r.reason}</td>
-                                        <td className="px-4 py-2">
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[r.status]}`}>
-                                                {statusLabel[r.status]}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2 text-right whitespace-nowrap">
-                                            {r.status === "PENDING" && (
-                                                <>
-                                                    <button onClick={() => resolve(r.id, "RESOLVED")} className="text-green-600 hover:underline mr-3">
-                                                        Đã xử lý
-                                                    </button>
-                                                    <button onClick={() => resolve(r.id, "REJECTED")} className="text-gray-500 hover:underline">
-                                                        Từ chối
-                                                    </button>
-                                                </>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                        <tbody className="divide-y divide-outline-variant/40">
+                            {loading ? (
+                                <TableSkeleton cols={6} />
+                            ) : reports.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-4 py-14 text-center text-on-surface-variant select-none">
+                                        <span className="material-symbols-outlined !text-[36px] text-outline block mb-1">
+                                            task_alt
+                                        </span>
+                                        Không có báo cáo nào
+                                    </td>
+                                </tr>
+                            ) : (
+                                reports.map((r) => {
+                                    const link = targetLink(r.targetType, r.targetId);
+                                    return (
+                                        <tr key={r.id} className="align-top hover:bg-surface-container-low/60 transition-colors">
+                                            <td className="px-4 py-3 text-on-surface">{r.reporterEmail}</td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                                    <Badge tone="neutral">{targetLabel[r.targetType] ?? r.targetType}</Badge>
+                                                    <span className="text-on-surface-variant tabular-nums">#{r.targetId}</span>
+                                                    {link && (
+                                                        <Link
+                                                            to={link}
+                                                            target="_blank"
+                                                            className="text-primary-container text-xs font-medium hover:underline"
+                                                        >
+                                                            Xem
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 max-w-xs">
+                                                <p className="line-clamp-2 text-on-surface-variant" title={r.reason}>
+                                                    {r.reason}
+                                                </p>
+                                            </td>
+                                            <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap">
+                                                {timeAgo(r.createdAt)}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <Badge tone={statusTone[r.status]} dot>
+                                                    {statusLabel[r.status]}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                                                {r.status === "PENDING" && (
+                                                    <div className="inline-flex gap-1.5">
+                                                        <button
+                                                            onClick={() => resolve(r.id, "RESOLVED")}
+                                                            disabled={busyId === r.id}
+                                                            className={btnSmPrimary}
+                                                        >
+                                                            Đã xử lý
+                                                        </button>
+                                                        <button
+                                                            onClick={() => resolve(r.id, "REJECTED")}
+                                                            disabled={busyId === r.id}
+                                                            className={btnSmSecondary}
+                                                        >
+                                                            Từ chối
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
                         </tbody>
                     </table>
                 </div>
-            )}
+                <Pager page={page} hasMore={hasMore} disabled={loading} onChange={setPage} />
+            </div>
         </div>
     );
 }
