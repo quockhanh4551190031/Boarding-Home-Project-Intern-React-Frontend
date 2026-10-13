@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { forumApi } from "../api/forumApi";
 import { useAuthStore } from "../store/authStore";
 import PostCard from "../components/PostCard";
 import CreatePostModal from "../components/CreatePostModal";
 import { alertErrorCls, btnPrimary, btnSecondary } from "../components/ui/styles";
 import type { ForumPost, PostFormData } from "../types/forum";
+import { useLoginRedirect } from "../hooks/useAuthRedirect";
 
 const PAGE_SIZE = 10;
 
@@ -27,7 +27,7 @@ function SkeletonPost() {
 }
 
 export default function ForumPage() {
-  const navigate = useNavigate();
+  const goLogin = useLoginRedirect();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const [posts, setPosts] = useState<ForumPost[]>([]);
@@ -72,7 +72,7 @@ export default function ForumPage() {
 
   const handleLike = async (post: ForumPost) => {
     if (!isAuthenticated) {
-      navigate("/login");
+      goLogin();
       return;
     }
     setError(null);
@@ -97,7 +97,7 @@ export default function ForumPage() {
 
   const openCreate = () => {
     if (!isAuthenticated) {
-      navigate("/login");
+      goLogin();
       return;
     }
     setShowCreate(true);

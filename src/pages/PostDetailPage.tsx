@@ -8,6 +8,7 @@ import ReportModal from "../components/ReportModal";
 import { alertErrorCls, btnPrimary, inputCls } from "../components/ui/styles";
 import { timeAgo } from "../utils/time";
 import type { ForumComment, ForumPost, ReportTargetType } from "../types/forum";
+import { useLoginRedirect } from "../hooks/useAuthRedirect";
 
 const FILLED = '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20';
 const cardCls = "bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm p-6";
@@ -18,6 +19,7 @@ export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const postId = Number(id);
   const navigate = useNavigate();
+  const goLogin = useLoginRedirect();
   const { isAuthenticated, email, role } = useAuthStore();
 
   const [post, setPost] = useState<ForumPost | null>(null);
@@ -48,7 +50,7 @@ export default function PostDetailPage() {
 
   const requireLogin = (): boolean => {
     if (!isAuthenticated) {
-      navigate("/login");
+      goLogin();
       return false;
     }
     return true;
@@ -287,7 +289,7 @@ export default function PostDetailPage() {
               onChange={(e) => setInput(e.target.value)}
               placeholder={isAuthenticated ? "Viết bình luận..." : "Đăng nhập để bình luận"}
               onFocus={() => {
-                if (!isAuthenticated) navigate("/login");
+                if (!isAuthenticated) goLogin();
               }}
               className={inputCls}
             />

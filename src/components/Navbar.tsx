@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useState } from "react";
 import LocationPickerModal from "./LocationPickerModal";
 
 export default function Navbar() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { isAuthenticated, email, role, logout } = useAuthStore();
     const [menuOpen, setMenuOpen] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
@@ -19,7 +20,7 @@ export default function Navbar() {
         <>
             <nav className="sticky top-0 z-50 h-16 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant">
                 <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2.5">
+                    <Link to="/" className="flex items-center gap-2.5" >
                         <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-sm">
                             <span className="material-symbols-outlined text-on-primary !text-[20px]">cottage</span>
                         </div>
@@ -90,10 +91,10 @@ export default function Navbar() {
                             </>
                         ) : (
                             <div className="flex items-center gap-2">
-                                <Link to="/login" className="px-3 py-1.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-low">
+                                <Link to="/login" state={{ from: location }} className="px-3 py-1.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-low">
                                     Đăng nhập
                                 </Link>
-                                <Link to="/register" className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary text-on-primary hover:bg-primary-container">
+                                <Link to="/register" state={{ from: location }} className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary text-on-primary hover:bg-primary-container">
                                     Đăng ký
                                 </Link>
                             </div>

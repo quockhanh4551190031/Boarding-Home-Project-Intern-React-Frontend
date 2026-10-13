@@ -1,6 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/authStore";
-import type {AuthResponse} from "../types/auth";
+import type { AuthResponse } from "../types/auth";
 
 const axiosClient = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -37,7 +37,7 @@ axiosClient.interceptors.response.use(
 
             if (!refreshToken) {
                 useAuthStore.getState().logout();
-                window.location.href = "/login";
+                window.location.href = "/login?reason=session";
                 return Promise.reject(error);
             }
 
@@ -71,7 +71,7 @@ axiosClient.interceptors.response.use(
             } catch (refreshError) {
                 processQueue(refreshError, null);
                 useAuthStore.getState().logout();
-                window.location.href = "/login";
+                window.location.href = "/login?reason=session";
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

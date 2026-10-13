@@ -7,6 +7,7 @@ import { useAuthStore } from "../store/authStore";
 import ImageGallery from "../components/ImageGallery";
 import RoomDirectionsMap from "../components/RoomDirectionsMap";
 import type { Room } from "../types/room";
+import { useLoginRedirect } from "../hooks/useAuthRedirect";
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("vi-VN").format(price);
@@ -23,6 +24,7 @@ const statusStyle: Record<Room["status"], { label: string; cls: string }> = {
 export default function RoomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const goLogin = useLoginRedirect();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const [room, setRoom] = useState<Room | null>(null);
@@ -51,7 +53,7 @@ export default function RoomDetailPage() {
 
   const toggleFavorite = async () => {
     if (!isAuthenticated) {
-      navigate("/login");
+      goLogin();
       return;
     }
     if (!room) return;
@@ -74,7 +76,7 @@ export default function RoomDetailPage() {
 
   const handleContact = async () => {
     if (!isAuthenticated) {
-      navigate("/login");
+      goLogin();
       return;
     }
     if (!room) return;
