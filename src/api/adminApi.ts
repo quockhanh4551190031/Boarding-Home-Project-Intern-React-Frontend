@@ -1,7 +1,6 @@
 import axiosClient from "./axiosClient";
 import type { AdminReport, AdminStats, AdminUser, PostStatus, ReportStatus, UserStatus } from "../types/admin";
 import type { ForumPost } from "../types/forum";
-import axios from "axios";
 
 export const adminApi = {
     getStats: async (): Promise<AdminStats> => {

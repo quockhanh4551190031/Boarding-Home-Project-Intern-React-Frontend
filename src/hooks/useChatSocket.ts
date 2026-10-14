@@ -1,63 +1,98 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { Client, IMessage } from "@stomp/stompjs";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Client } from "@stomp/stompjs";
+import type { IMessage, StompSubscription } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { useAuthStore } from "../store/authStore";
 import type { Message } from "../types/chat";
 
-export function useChatSocket(
-  chatRoomId: number | null,
-  onMessage: (msg: Message) => void
-) {
+export function useChatSocket(roomIds: number[], onMessage: (msg: Message) => void) {
   const clientRef = useRef<Client | null>(null);
+  const subsRef = useRef<Map<number, StompSubscription>>(new Map());
+  const roomIdsRef = useRef<number[]>(roomIds);
   const onMessageRef = useRef(onMessage);
   const [connected, setConnected] = useState(false);
-  const token = useAuthStore((state) => state.accessToken);
+  const hasToken = useAuthStore((s) => !!s.accessToken);
 
-  // luôn dùng callback mới nhất mà không cần reconnect socket
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
 
+  const syncSubscriptions = useCallback(() => {
+    const client = clientRef.current;
+    if (!client || !client.connected) return;
+
+    const wanted = new Set(roomIdsRef.current);
+
+    subsRef.current.forEach((sub, id) => {
+      if (!wanted.has(id)) {
+        sub.unsubscribe();
+        subsRef.current.delete(id);
+      }
+    });
+
+    wanted.forEach((id) => {
+      if (subsRef.current.has(id)) return;
+      const sub = client.subscribe(`/topic/chat/${id}`, (m: IMessage) => {
+        onMessageRef.current(JSON.parse(m.body) as Message);
+      });
+      subsRef.current.set(id, sub);
+    });
+  }, []);
+
+  // Danh sách phòng đổi (có phòng mới) thì đồng bộ lại subscription
+  const roomKey = roomIds.join(",");
   useEffect(() => {
-    if (!chatRoomId || !token) return;
+    roomIdsRef.current = roomIds;
+    syncSubscriptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomKey, syncSubscriptions]);
+
+  useEffect(() => {
+    if (!hasToken) return;
 
     const client = new Client({
       webSocketFactory: () => new SockJS(import.meta.env.VITE_WS_URL),
-      connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 3000,
+      beforeConnect: () => {
+        client.connectHeaders = {
+          Authorization: `Bearer ${useAuthStore.getState().accessToken ?? ""}`,
+        };
+      },
       onConnect: () => {
         setConnected(true);
-        client.subscribe(`/topic/chat/${chatRoomId}`, (message: IMessage) => {
-          const body: Message = JSON.parse(message.body);
-          onMessageRef.current(body);
-        });
+        subsRef.current.clear();
+        syncSubscriptions();
       },
       onDisconnect: () => setConnected(false),
       onStompError: () => setConnected(false),
-      onWebSocketClose: () => setConnected(false),
+      onWebSocketClose: () => {
+        setConnected(false);
+        subsRef.current.clear();
+      },
     });
 
     client.activate();
     clientRef.current = client;
 
     return () => {
-      client.deactivate();
+      subsRef.current.clear();
       clientRef.current = null;
       setConnected(false);
+      void client.deactivate();
     };
-  }, [chatRoomId, token]);
+  }, [hasToken, syncSubscriptions]);
 
-  const sendMessage = useCallback(
-    (content: string) => {
-      if (!clientRef.current || !chatRoomId) return;
-      clientRef.current.publish({
-        destination: "/app/chat.send",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ chatRoomId, content, messageType: "TEXT" }),
-      });
-    },
-    [chatRoomId]
-  );
+  /** Trả về false nếu đang mất kết nối (tin chưa được gửi). */
+  const sendMessage = useCallback((chatRoomId: number, content: string): boolean => {
+    const client = clientRef.current;
+    if (!client || !client.connected) return false;
+    client.publish({
+      destination: "/app/chat.send",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ chatRoomId, content, messageType: "TEXT" }),
+    });
+    return true;
+  }, []);
 
   return { connected, sendMessage };
 }
