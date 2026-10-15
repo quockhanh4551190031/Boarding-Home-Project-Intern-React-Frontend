@@ -6,6 +6,9 @@ import ImageGallery from "../components/ImageGallery";
 import RoomDirectionsMap from "../components/RoomDirectionsMap";
 import type { BoardingHouse } from "../types/house";
 import type { Room } from "../types/room";
+import ReviewSection from "../components/ReviewSection";
+import RatingLine from "../components/RatingLine";
+import type { ReviewSummary } from "../types/review";
 
 function formatPrice(price: number): string {
     return new Intl.NumberFormat("vi-VN").format(price);
@@ -29,6 +32,7 @@ export default function HouseDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [showRooms, setShowRooms] = useState(false);
     const roomsRef = useRef<HTMLDivElement>(null);
+    const [ratingSummary, setRatingSummary] = useState<ReviewSummary | null>(null);
 
     useEffect(() => {
         if (!id) return;
@@ -101,6 +105,7 @@ export default function HouseDetailPage() {
                     <span className="material-symbols-outlined !text-[16px]">location_on</span>
                     {house.address}, {house.ward}, {house.city}
                 </p>
+                {ratingSummary && <RatingLine summary={ratingSummary} />}
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6 items-start">
@@ -119,6 +124,14 @@ export default function HouseDetailPage() {
                     <section className={cardCls}>
                         <RoomDirectionsMap destLat={house.latitude} destLng={house.longitude} destLabel={house.name} />
                     </section>
+                    <div id="reviews" className="scroll-mt-24">
+                        <ReviewSection
+                            targetType="HOUSE"
+                            targetId={house.id}
+                            noun="nhà trọ"
+                            onSummaryChange={setRatingSummary}
+                        />
+                    </div>
                 </div>
 
                 <aside className={`${cardCls} lg:sticky lg:top-24 flex flex-col gap-4`}>

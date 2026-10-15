@@ -11,6 +11,7 @@ const adminLinks = [
     { to: "/dashboard/admin/users", label: "Người dùng", icon: "group" },
     { to: "/dashboard/admin/posts", label: "Bài đăng diễn đàn", icon: "forum" },
     { to: "/dashboard/admin/reports", label: "Báo cáo vi phạm", icon: "flag" },
+    { to: "/dashboard/admin/reviews", label: "Đánh giá", icon: "star" },
 ];
 
 export default function Sidebar() {

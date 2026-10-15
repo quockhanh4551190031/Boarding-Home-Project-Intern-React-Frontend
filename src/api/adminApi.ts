@@ -1,6 +1,7 @@
 import axiosClient from "./axiosClient";
 import type { AdminReport, AdminStats, AdminUser, PostStatus, ReportStatus, UserStatus } from "../types/admin";
 import type { ForumPost } from "../types/forum";
+import type { AdminReview } from "../types/review";
 
 export const adminApi = {
     getStats: async (): Promise<AdminStats> => {
@@ -43,6 +44,11 @@ export const adminApi = {
 
     updateReportStatus: async (id: number, status: ReportStatus): Promise<AdminReport> => {
         const res = await axiosClient.put<AdminReport>(`/admin/reports/${id}`, { status });
+        return res.data;
+    },
+
+    getReviews: async (params: { page?: number; size?: number }): Promise<AdminReview[]> => {
+        const res = await axiosClient.get<AdminReview[]>("/admin/reviews", { params });
         return res.data;
     },
 }

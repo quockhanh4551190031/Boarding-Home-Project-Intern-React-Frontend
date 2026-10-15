@@ -4,6 +4,8 @@ import type { Room, RoomSearchParams } from "../types/room";
 import HouseCard from "../components/HouseCard";
 import type { HouseGroup } from "../components/HouseCard";
 import RoomFilterSidebar from "../components/RoomFilterSidebar";
+import { reviewApi } from "../api/reviewApi";
+import type { ReviewSummaryItem } from "../types/review";
 
 function groupByHouse(rooms: Room[]): HouseGroup[] {
     const map = new Map<number, HouseGroup>();
@@ -47,6 +49,7 @@ export default function HomePage() {
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [ratings, setRatings] = useState<Record<number, ReviewSummaryItem> | null>(null);
 
     useEffect(() => {
         setLoading(true);
@@ -60,6 +63,26 @@ export default function HomePage() {
             .catch(() => setHouses([]))
             .finally(() => setLoading(false));
     }, [filters]);
+
+    useEffect(() => {
+        if (houses.length === 0) {
+            setRatings({});
+            return;
+        }
+        let cancelled = false;
+        setRatings(null);
+        reviewApi
+            .getSummaries("HOUSE", houses.map((h) => h.houseId))
+            .then((r) => {
+                if (!cancelled) setRatings(r);
+            })
+            .catch(() => {
+                if (!cancelled) setRatings({});
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [houses]);
 
     const goToPage = (page: number) => {
         setFilters({ ...filters, page });
@@ -112,7 +135,11 @@ export default function HomePage() {
                         <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {houses.map((h) => (
-                                    <HouseCard key={h.houseId} house={h} />
+                                    <HouseCard
+                                        key={h.houseId}
+                                        house={h}
+                                        rating={ratings ? ratings[h.houseId] ?? { average: 0, count: 0 } : undefined}
+                                    />
                                 ))}
                             </div>
 

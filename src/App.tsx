@@ -20,6 +20,7 @@ import ForumPage from "./pages/ForumPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import ChatbotWidget from "./components/ChatbotWidget";
 import HouseDetailPage from "./pages/HouseDetailPage";
+import AdminReviewsPage from "./pages/dashboard/AdminReviewsPage";
 
 export default function App() {
     return (
@@ -59,6 +60,7 @@ export default function App() {
                         <Route path="/dashboard/admin/users" element={<AdminUsersPage />} />
                         <Route path="/dashboard/admin/posts" element={<AdminPostsPage />} />
                         <Route path="/dashboard/admin/reports" element={<AdminReportsPage />} />
+                        <Route path="/dashboard/admin/reviews" element={<AdminReviewsPage />} />
                     </Route>
                 </Route>
 

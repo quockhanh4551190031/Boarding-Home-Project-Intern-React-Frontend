@@ -9,6 +9,7 @@ import { alertErrorCls, btnSmSecondary, iconBtn, inputCls } from "../components/
 import { isSoundMuted, playNotificationSound, setSoundMuted } from "../utils/sound";
 import { timeAgo } from "../utils/time";
 import type { ChatRoom, Message } from "../types/chat";
+import { useUnreadStore } from "../store/unreadStore";
 
 const PAGE_SIZE = 30;
 const POLL_MS = 15000;
@@ -50,6 +51,7 @@ function clock(iso: string): string {
 export default function ChatPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentUserEmail = useAuthStore((s) => s.email);
+  const setUnreadTotal = useUnreadStore((s) => s.setCount);
 
   const roomParam = Number(searchParams.get("roomId"));
   const selectedRoomId = Number.isFinite(roomParam) && roomParam > 0 ? roomParam : null;
@@ -123,6 +125,10 @@ export default function ChatPage() {
   }, [loadRooms]);
 
   /* ---------- Tải tin nhắn khi đổi cuộc trò chuyện ---------- */
+  useEffect(() => {
+    if (roomsLoading || (roomsError && rooms.length === 0)) return;
+    setUnreadTotal(rooms.reduce((sum, r) => sum + r.unreadCount, 0));
+  }, [rooms, roomsLoading, roomsError, setUnreadTotal]);
 
   useEffect(() => {
     if (!selectedRoomId) {

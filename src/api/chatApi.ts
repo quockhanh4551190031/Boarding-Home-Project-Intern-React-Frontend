@@ -23,4 +23,9 @@ export const chatApi = {
   },
 
   markAsRead: (chatRoomId: number) => axiosClient.put(`/chat/rooms/${chatRoomId}/read`),
+
+  getUnreadCount: async (): Promise<number> => {
+    const res = await axiosClient.get<{ count: number }>("/chat/unread-count");
+    return res.data.count;
+  },
 };

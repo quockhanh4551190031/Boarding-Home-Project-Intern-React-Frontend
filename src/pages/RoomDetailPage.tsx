@@ -8,6 +8,9 @@ import ImageGallery from "../components/ImageGallery";
 import RoomDirectionsMap from "../components/RoomDirectionsMap";
 import type { Room } from "../types/room";
 import { useLoginRedirect } from "../hooks/useAuthRedirect";
+import ReviewSection from "../components/ReviewSection";
+import RatingLine from "../components/RatingLine";
+import type { ReviewSummary } from "../types/review";
 
 function formatPrice(price: number): string {
   return new Intl.NumberFormat("vi-VN").format(price);
@@ -34,6 +37,7 @@ export default function RoomDetailPage() {
   const [contactLoading, setContactLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [ratingSummary, setRatingSummary] = useState<ReviewSummary | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -163,6 +167,14 @@ export default function RoomDetailPage() {
               destLabel={room.houseName}
             />
           </section>
+          <div id="reviews" className="scroll-mt-24">
+            <ReviewSection
+              targetType="ROOM"
+              targetId={room.id}
+              noun="phòng"
+              onSummaryChange={setRatingSummary}
+            />
+          </div>
         </div>
 
         {/* Cột phải: card thông tin dính */}
@@ -180,6 +192,7 @@ export default function RoomDetailPage() {
             </span>
             <span className="text-sm text-on-surface-variant">đ/tháng</span>
           </div>
+          {ratingSummary && <RatingLine summary={ratingSummary} />}
 
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-surface-container-low rounded-lg p-3 flex flex-col gap-0.5">
