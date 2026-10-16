@@ -1,5 +1,6 @@
 export interface BoardingHouse {
   id: number;
+  landlordId: number;
   name: string;
   address: string;
   ward: string;

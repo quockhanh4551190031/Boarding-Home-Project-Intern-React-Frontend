@@ -1,8 +1,7 @@
 export interface ChatRoom {
   id: number;
   otherUserId: number;
-  otherUserEmail: string;
-  otherUserFullName: string | null;
+  otherUserName: string;
   relatedRoomId: number | null;
   relatedRoomTitle: string | null;
   lastMessage: string | null;

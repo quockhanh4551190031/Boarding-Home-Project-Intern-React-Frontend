@@ -6,6 +6,10 @@ import Badge from "../components/ui/Badge";
 import type { BadgeTone } from "../components/ui/Badge";
 import PageHeader from "../components/ui/PageHeader";
 import Segmented from "../components/ui/Segmented";
+import { Link } from "react-router-dom";
+import { usePhoneGateStore } from "../store/phoneGateStore";
+import { hasPhone, normalizePhone } from "../utils/profile";
+
 import {
   alertErrorCls,
   btnPrimary,
@@ -104,7 +108,11 @@ export default function ProfilePage() {
     return (Object.keys(base) as (keyof ProfileFormData)[]).some((k) => base[k] !== form[k]);
   }, [profile, form]);
 
-  const phoneInvalid = form.phone.trim() !== "" && !PHONE_RE.test(form.phone.trim());
+  const isLandlord = profile?.role === "LANDLORD";
+  const phoneNorm = normalizePhone(form.phone);
+  const phoneEmpty = phoneNorm === "";
+  const phoneInvalid = !phoneEmpty && !PHONE_RE.test(phoneNorm);
+  const phoneMissing = isLandlord && phoneEmpty; // chủ trọ không được để trống số điện thoại
 
   const set = <K extends keyof ProfileFormData>(key: K, value: ProfileFormData[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -116,6 +124,10 @@ export default function ProfilePage() {
     setError(null);
     setSuccess(false);
 
+    if (phoneMissing) {
+      setError("Chủ trọ bắt buộc phải có số điện thoại để người thuê liên hệ. Không thể lưu khi để trống.");
+      return;
+    }
     if (phoneInvalid) {
       setError("Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0)");
       return;
@@ -127,6 +139,7 @@ export default function ProfilePage() {
       setProfile(updated);
       setForm(toForm(updated));
       setSuccess(true);
+      usePhoneGateStore.getState().setNeedsPhone(isLandlord ? !hasPhone(updated.phone) : false);
     } catch (err) {
       setError(apiErrorMessage(err, "Lưu hồ sơ thất bại, thử lại sau"));
     } finally {
@@ -237,13 +250,28 @@ export default function ProfilePage() {
           <div className="bg-surface-container-low rounded-lg p-3 flex gap-2 text-xs text-on-surface-variant leading-relaxed">
             <span className="material-symbols-outlined !text-[18px] text-primary shrink-0">lock</span>
             <p>
-              Họ tên hiển thị trên diễn đàn và khi nhắn tin. Các thông tin còn lại chỉ mình bạn xem được.
+              {isLandlord
+                ? "Họ tên và số điện thoại hiển thị công khai để người thuê liên hệ. Các thông tin còn lại chỉ mình bạn xem được."
+                : "Họ tên hiển thị trên diễn đàn và khi nhắn tin. Các thông tin còn lại chỉ mình bạn xem được."}
             </p>
           </div>
+          <Link
+            to={`/users/${profile.userId}`}
+            className="h-10 rounded-lg border border-outline-variant bg-surface-container-lowest text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors inline-flex items-center justify-center gap-1.5"
+          >
+            <span className="material-symbols-outlined !text-[18px]">visibility</span>
+            Xem hồ sơ công khai
+          </Link>
         </aside>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className={`${cardCls} lg:col-span-2 p-6 flex flex-col gap-6`}>
+          {isLandlord && !hasPhone(profile.phone) && (
+            <div className="bg-amber-100 text-amber-700 text-sm px-3 py-2.5 rounded-lg flex items-start gap-2">
+              <span className="material-symbols-outlined !text-[18px] mt-0.5">call</span>
+              Chủ trọ bắt buộc phải có số điện thoại để người thuê liên hệ. Hãy nhập số và lưu hồ sơ.
+            </div>
+          )}
           {!profile.profileCompleted && (
             <div className="bg-amber-100 text-amber-700 text-sm px-3 py-2.5 rounded-lg flex items-start gap-2">
               <span className="material-symbols-outlined !text-[18px] mt-0.5">info</span>
@@ -278,7 +306,7 @@ export default function ProfilePage() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="phone" className={labelCls}>
-                  Số điện thoại
+                  Số điện thoại {isLandlord && <span className="text-error">*</span>}
                 </label>
                 <input
                   id="phone"
@@ -287,13 +315,19 @@ export default function ProfilePage() {
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder="0912345678"
-                  aria-invalid={phoneInvalid}
-                  className={`${inputCls} tabular-nums ${phoneInvalid ? "ring-2 ring-error/40" : ""}`}
+                  aria-invalid={phoneInvalid || phoneMissing}
+                  className={`${inputCls} tabular-nums ${phoneInvalid || phoneMissing ? "ring-2 ring-error/40" : ""}`}
                   value={form.phone}
                   onChange={(e) => set("phone", e.target.value)}
                 />
-                <p className={`mt-1.5 text-xs ${phoneInvalid ? "text-error" : "text-on-surface-variant"}`}>
-                  {phoneInvalid ? "Số điện thoại không hợp lệ" : "10 số, bắt đầu bằng 0"}
+                <p className={`mt-1.5 text-xs ${phoneInvalid || phoneMissing ? "text-error" : "text-on-surface-variant"}`}>
+                  {phoneInvalid
+                    ? "Số điện thoại không hợp lệ"
+                    : phoneMissing
+                      ? "Chủ trọ bắt buộc phải có số điện thoại, không được để trống"
+                      : isLandlord
+                        ? "10 số, bắt đầu bằng 0. Hiển thị công khai để người thuê liên hệ"
+                        : "10 số, bắt đầu bằng 0"}
                 </p>
               </div>
 

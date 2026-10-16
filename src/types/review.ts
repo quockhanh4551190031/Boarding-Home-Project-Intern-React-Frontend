@@ -2,6 +2,7 @@ export type ReviewTargetType = "HOUSE" | "ROOM";
 
 export interface Review {
     id: number;
+    authorId: number;
     rating: number;
     comment: string | null;
     authorName: string;

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import Avatar from "./ui/Avatar";
+import { UserAvatarLink, UserNameLink } from "./ui/UserLink";
 import type { ForumPost } from "../types/forum";
 import { timeAgo } from "../utils/time";
 
@@ -11,14 +11,16 @@ interface Props {
 const FILLED = '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20';
 
 export default function PostCard({ post, onLike }: Props) {
-  const author = post.userFullName ?? post.userEmail;
+  const author = post.authorName;
 
   return (
     <article className="bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm hover:shadow-md transition-shadow p-5">
       <div className="flex items-center gap-3 mb-3">
-        <Avatar name={author} />
+        <UserAvatarLink userId={post.userId} name={author} />
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-on-surface truncate">{author}</p>
+          <UserNameLink userId={post.userId} className="block text-sm font-semibold text-on-surface truncate">
+            {author}
+          </UserNameLink>
           <p className="text-xs text-on-surface-variant">{timeAgo(post.createdAt)}</p>
         </div>
       </div>

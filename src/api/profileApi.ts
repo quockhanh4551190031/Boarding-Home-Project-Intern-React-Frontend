@@ -1,8 +1,7 @@
 import axiosClient from "./axiosClient";
 import type { Profile, ProfileFormData } from "../types/profile";
+import { normalizePhone } from "../utils/profile";
 
-// Backend validate phone bằng regex nên chuỗi rỗng "" sẽ bị từ chối —
-// chuyển mọi trường trống thành null trước khi gửi
 const emptyToNull = (v: string) => (v.trim() === "" ? null : v.trim());
 
 export const profileApi = {
@@ -14,7 +13,7 @@ export const profileApi = {
   update: async (data: ProfileFormData): Promise<Profile> => {
     const payload = {
       fullName: data.fullName.trim(),
-      phone: emptyToNull(data.phone),
+      phone: emptyToNull(normalizePhone(data.phone)),
       gender: data.gender === "" ? null : data.gender,
       dateOfBirth: emptyToNull(data.dateOfBirth),
       address: emptyToNull(data.address),

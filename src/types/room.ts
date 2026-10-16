@@ -8,6 +8,7 @@ export interface Room {
     id: number;
     houseId: number;
     houseName: string;
+    houseAddress: string;
     landlordId: number;
     houseLatitude: number;
     houseLongitude: number;

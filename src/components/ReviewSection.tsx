@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { reviewApi } from "../api/reviewApi";
 import { useAuthStore } from "../store/authStore";
 import { useLoginRedirect } from "../hooks/useAuthRedirect";
-import Avatar from "./ui/Avatar";
+import { UserAvatarLink, UserNameLink } from "./ui/UserLink";
 import Badge from "./ui/Badge";
 import ConfirmDialog from "./ui/ConfirmDialog";
 import StarInput from "./ui/StarInput";
@@ -297,10 +297,12 @@ export default function ReviewSection({ targetType, targetId, noun, onSummaryCha
                         <ul className="divide-y divide-outline-variant/40">
                             {reviews.map((r) => (
                                 <li key={r.id} className="flex gap-3 py-4 first:pt-6">
-                                    <Avatar name={r.authorName} size="sm" tone="muted" />
+                                    <UserAvatarLink userId={r.authorId} name={r.authorName} size="sm" tone="muted" />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="font-semibold text-sm text-on-surface">{r.authorName}</span>
+                                            <UserNameLink userId={r.authorId} className="font-semibold text-sm text-on-surface">
+                                                {r.authorName}
+                                            </UserNameLink>
                                             {r.mine && <Badge tone="info">Của bạn</Badge>}
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2 mt-0.5">

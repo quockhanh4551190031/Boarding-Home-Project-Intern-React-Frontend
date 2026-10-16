@@ -11,6 +11,7 @@ import { alertErrorCls, btnSmDanger, btnSmPrimary, btnSmSecondary } from "../../
 import { timeAgo } from "../../utils/time";
 import type { PostStatus } from "../../types/admin";
 import type { ForumPost } from "../../types/forum";
+import { UserNameLink } from "../../components/ui/UserLink";
 
 const PAGE_SIZE = 20;
 
@@ -130,7 +131,7 @@ export default function AdminPostsPage() {
                                         <span className="font-semibold text-on-surface">{p.title}</span>
                                     )}
                                     <p className="text-xs text-on-surface-variant mt-0.5 flex flex-wrap items-center gap-x-2">
-                                        <span>{p.userFullName ?? p.userEmail}</span>
+                                        <UserNameLink userId={p.userId}>{p.authorName}</UserNameLink>
                                         <span>·</span>
                                         <span>{timeAgo(p.createdAt)}</span>
                                         <span>·</span>

@@ -1,8 +1,8 @@
 export interface ForumPost {
   id: number;
   userId: number;
-  userEmail: string;
-  userFullName: string | null;
+  authorName: string;
+  mine: boolean;
   title: string;
   content: string;
   sharedRoomId: number | null;
@@ -17,8 +17,8 @@ export interface ForumPost {
 export interface ForumComment {
   id: number;
   userId: number;
-  userEmail: string;
-  userFullName: string | null;
+  authorName: string;
+  mine: boolean;
   content: string;
   parentCommentId: number | null;
   createdAt: string;

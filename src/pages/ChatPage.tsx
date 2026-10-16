@@ -10,6 +10,7 @@ import { isSoundMuted, playNotificationSound, setSoundMuted } from "../utils/sou
 import { timeAgo } from "../utils/time";
 import type { ChatRoom, Message } from "../types/chat";
 import { useUnreadStore } from "../store/unreadStore";
+import { UserAvatarLink, UserNameLink } from "../components/ui/UserLink";
 
 const PAGE_SIZE = 30;
 const POLL_MS = 15000;
@@ -300,11 +301,11 @@ export default function ChatPage() {
     const sorted = sortRooms(rooms);
     if (!q) return sorted;
     return sorted.filter((r) =>
-      `${r.otherUserFullName ?? ""} ${r.otherUserEmail} ${r.relatedRoomTitle ?? ""}`.toLowerCase().includes(q)
+      `${r.otherUserName} ${r.relatedRoomTitle ?? ""}`.toLowerCase().includes(q)
     );
   }, [rooms, query]);
 
-  const otherName = selectedRoom ? selectedRoom.otherUserFullName ?? selectedRoom.otherUserEmail : "";
+  const otherName = selectedRoom ? selectedRoom.otherUserName : "";
 
   return (
     <div className="max-w-6xl mx-auto sm:px-4 sm:py-6">
@@ -370,7 +371,7 @@ export default function ChatPage() {
               </div>
             ) : (
               filteredRooms.map((room) => {
-                const name = room.otherUserFullName ?? room.otherUserEmail;
+                const name = room.otherUserName;
                 const active = room.id === selectedRoomId;
                 return (
                   <button
@@ -436,9 +437,9 @@ export default function ChatPage() {
                 <button type="button" onClick={backToList} aria-label="Quay lại danh sách" className={`${iconBtn} md:hidden`}>
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <Avatar name={otherName} />
+                <UserAvatarLink userId={selectedRoom.otherUserId} name={otherName} />
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-on-surface truncate leading-tight">{otherName}</p>
+                  <UserNameLink userId={selectedRoom.otherUserId} className="block font-semibold text-on-surface truncate leading-tight">{otherName}</UserNameLink>
                   {selectedRoom.relatedRoomId ? (
                     <Link
                       to={`/rooms/${selectedRoom.relatedRoomId}`}
@@ -447,7 +448,7 @@ export default function ChatPage() {
                       Về phòng: {selectedRoom.relatedRoomTitle}
                     </Link>
                   ) : (
-                    <p className="text-xs text-on-surface-variant truncate">{selectedRoom.otherUserEmail}</p>
+                    <Link to={`/users/${selectedRoom.otherUserId}`} className="text-xs text-on-surface-variant hover:underline truncate block">Xem hồ sơ</Link>
                   )}
                 </div>
                 <button
@@ -547,7 +548,7 @@ export default function ChatPage() {
                               (joinsNext ? (
                                 <span className="w-8 shrink-0" />
                               ) : (
-                                <Avatar name={otherName} size="sm" tone="muted" />
+                                <UserAvatarLink userId={selectedRoom.otherUserId} name={otherName} size="sm" tone="muted" />
                               ))}
                             <div className={`max-w-[75%] flex flex-col ${mine ? "items-end" : "items-start"}`}>
                               <div

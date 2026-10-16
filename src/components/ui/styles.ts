@@ -33,3 +33,8 @@ export const thCls =
 
 export const btnPrimaryLg =
     "w-full h-11 px-5 bg-primary-container text-on-primary text-sm font-medium rounded-lg hover:bg-primary transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2";
+
+export const sectionCardCls =
+    "bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm p-6";
+export const asideCardCls =
+    "bg-surface-container-lowest rounded-xl border border-outline-variant/50 shadow-sm p-5";

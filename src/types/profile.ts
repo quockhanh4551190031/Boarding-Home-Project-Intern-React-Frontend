@@ -1,6 +1,7 @@
 export type Gender = "MALE" | "FEMALE" | "OTHER";
 
 export interface Profile {
+  userId: number;
   email: string;
   role: string;
   fullName: string | null;

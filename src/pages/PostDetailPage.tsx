@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { forumApi } from "../api/forumApi";
 import { useAuthStore } from "../store/authStore";
-import Avatar from "../components/ui/Avatar";
+import { UserAvatarLink, UserNameLink } from "../components/ui/UserLink";
 import ReportModal from "../components/ReportModal";
 import { alertErrorCls, btnPrimary, inputCls } from "../components/ui/styles";
 import { timeAgo } from "../utils/time";
@@ -20,7 +20,7 @@ export default function PostDetailPage() {
   const postId = Number(id);
   const navigate = useNavigate();
   const goLogin = useLoginRedirect();
-  const { isAuthenticated, email, role } = useAuthStore();
+  const { isAuthenticated, role } = useAuthStore();
 
   const [post, setPost] = useState<ForumPost | null>(null);
   const [comments, setComments] = useState<ForumComment[]>([]);
@@ -56,7 +56,7 @@ export default function PostDetailPage() {
     return true;
   };
 
-  const canModify = (ownerEmail: string) => email === ownerEmail || role === "ADMIN";
+  const canModify = (mine: boolean) => mine || role === "ADMIN";
 
   const handleLike = async () => {
     if (!post || !requireLogin()) return;
@@ -111,7 +111,7 @@ export default function PostDetailPage() {
   const startReply = (c: ForumComment) => {
     if (!requireLogin()) return;
     // Luôn gắn vào comment gốc để giữ tối đa 1 cấp trả lời
-    setReplyTo({ id: c.parentCommentId ?? c.id, name: c.userFullName ?? c.userEmail });
+    setReplyTo({ id: c.parentCommentId ?? c.id, name: c.authorName });
   };
 
   const openReport = (type: ReportTargetType, targetId: number, label: string) => {
@@ -140,16 +140,16 @@ export default function PostDetailPage() {
     );
   }
 
-  const author = post.userFullName ?? post.userEmail;
+  const author = post.authorName;
   const topLevel = comments.filter((c) => c.parentCommentId === null);
   const repliesOf = (parentId: number) => comments.filter((c) => c.parentCommentId === parentId);
 
   const renderComment = (c: ForumComment, isReply: boolean) => {
-    const name = c.userFullName ?? c.userEmail;
+    const name = c.authorName;
     return (
       <div key={c.id} className={isReply ? "ml-11 mt-3" : "mt-5"}>
         <div className="flex gap-3">
-          <Avatar name={name} size="sm" tone="muted" />
+          <UserAvatarLink userId={c.userId} name={name} size="sm" tone="muted" />
           <div className="flex-1 min-w-0">
             <div className="bg-surface-container-low rounded-xl px-3.5 py-2.5">
               <p className="text-sm font-semibold text-on-surface">{name}</p>
@@ -162,12 +162,12 @@ export default function PostDetailPage() {
               <button onClick={() => startReply(c)} className="font-medium hover:text-primary-container">
                 Trả lời
               </button>
-              {canModify(c.userEmail) && (
+              {canModify(c.mine) && (
                 <button onClick={() => handleDeleteComment(c.id)} className="font-medium hover:text-error">
                   Xóa
                 </button>
               )}
-              {email !== c.userEmail && (
+              {!c.mine && (
                 <button
                   onClick={() => openReport("COMMENT", c.id, c.content)}
                   className="font-medium hover:text-error"
@@ -197,7 +197,7 @@ export default function PostDetailPage() {
       <article className={cardCls}>
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Avatar name={author} size="lg" />
+            <UserAvatarLink userId={post.userId} name={author} size="lg" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-on-surface truncate">{author}</p>
               <p className="text-xs text-on-surface-variant">{timeAgo(post.createdAt)}</p>
@@ -205,7 +205,7 @@ export default function PostDetailPage() {
           </div>
 
           <div className="flex gap-1 shrink-0">
-            {canModify(post.userEmail) && (
+            {canModify(post.mine) && (
               <button
                 onClick={handleDeletePost}
                 className={`${ghostBtn} text-error hover:bg-error-container/40`}
@@ -214,7 +214,7 @@ export default function PostDetailPage() {
                 Xóa bài
               </button>
             )}
-            {email !== post.userEmail && (
+            {!post.mine && (
               <button
                 onClick={() => openReport("POST", post.id, post.title)}
                 className={`${ghostBtn} text-on-surface-variant hover:bg-surface-container-low`}

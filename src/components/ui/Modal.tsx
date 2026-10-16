@@ -8,6 +8,8 @@ interface Props {
     icon?: string;
     size?: "sm" | "md" | "lg";
     closeOnBackdrop?: boolean;
+    /** false: không có nút đóng, không đóng bằng Esc hay bấm nền (khung bắt buộc). */
+    dismissible?: boolean;
     onClose: () => void;
     children: ReactNode;
     footer?: ReactNode;
@@ -21,6 +23,7 @@ export default function Modal({
     icon,
     size = "md",
     closeOnBackdrop = false,
+    dismissible = true,
     onClose,
     children,
     footer,
@@ -32,7 +35,7 @@ export default function Modal({
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") closeRef.current();
+            if (e.key === "Escape" && dismissible) closeRef.current();
         };
         document.addEventListener("keydown", onKeyDown);
         const prevOverflow = document.body.style.overflow;
@@ -41,13 +44,13 @@ export default function Modal({
             document.removeEventListener("keydown", onKeyDown);
             document.body.style.overflow = prevOverflow;
         };
-    }, []);
+    }, [dismissible]);
 
     return createPortal(
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-on-surface/20 backdrop-blur-[2px]"
             onMouseDown={(e) => {
-                if (closeOnBackdrop && e.target === e.currentTarget) onClose();
+                if (closeOnBackdrop && dismissible && e.target === e.currentTarget) onClose();
             }}
         >
             <div
@@ -66,14 +69,16 @@ export default function Modal({
                         <h2 className="font-semibold text-on-surface leading-tight">{title}</h2>
                         {subtitle && <p className="text-xs text-on-surface-variant truncate mt-0.5">{subtitle}</p>}
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        aria-label="Đóng"
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
-                    >
-                        <span className="material-symbols-outlined">close</span>
-                    </button>
+                    {dismissible && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label="Đóng"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                        >
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                    )}
                 </header>
 
                 <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">{children}</div>
