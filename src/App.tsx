@@ -22,7 +22,8 @@ import ChatbotWidget from "./components/ChatbotWidget";
 import HouseDetailPage from "./pages/HouseDetailPage";
 import AdminReviewsPage from "./pages/dashboard/AdminReviewsPage";
 import UserProfilePage from "./pages/UserProfilePage";
-import PhoneRequiredGate from "./components/phoneRequiredGate";
+import PhoneRequiredGate from "./components/PhoneRequiredGate";
+import SearchPage from "./pages/SearchPage";
 
 export default function App() {
     return (
@@ -39,7 +40,9 @@ export default function App() {
                     <Route path="/forum" element={<ForumPage />} />
                     <Route path="/users/:id" element={<UserProfilePage />} />
                     <Route path="/forum/:id" element={<PostDetailPage />} />
+                    <Route path="/search" element={<SearchPage />} />
                     <Route path="/houses/:id" element={<HouseDetailPage />} />
+
 
                     <Route element={<ProtectedRoute />}>
                         <Route path="/profile" element={<ProfilePage />} />

@@ -5,6 +5,7 @@ import { useUnreadStore } from "../store/unreadStore";
 import { useUnreadPolling } from "../hooks/useUnreadPolling";
 import Avatar from "./ui/Avatar";
 import LocationPickerModal from "./LocationPickerModal";
+import SearchBox from "./SearchBox";
 
 const baseLink = "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5";
 const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -39,6 +40,7 @@ export default function Navbar() {
 
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const baseTitle = useRef(document.title);
@@ -47,6 +49,7 @@ export default function Navbar() {
     useEffect(() => {
         setMenuOpen(false);
         setMobileOpen(false);
+        setSearchOpen(false);
     }, [location.pathname]);
 
     // Bấm ra ngoài hoặc nhấn Esc thì đóng menu tài khoản
@@ -82,15 +85,25 @@ export default function Navbar() {
         navigate("/login");
     };
 
+    const toggleMobileMenu = () => {
+        setMobileOpen((o) => !o);
+        setSearchOpen(false);
+    };
+
+    const toggleSearch = () => {
+        setSearchOpen((o) => !o);
+        setMobileOpen(false);
+    };
+
     const showUnread = isAuthenticated && unread > 0;
 
     return (
         <nav className="sticky top-0 z-50 h-16 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant">
-            <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
+            <div className="max-w-6xl mx-auto px-4 h-full flex items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                     <button
                         type="button"
-                        onClick={() => setMobileOpen((o) => !o)}
+                        onClick={toggleMobileMenu}
                         aria-label="Mở menu"
                         aria-expanded={mobileOpen}
                         className="md:hidden relative w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low"
@@ -112,7 +125,7 @@ export default function Navbar() {
                     </Link>
                 </div>
 
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden md:flex items-center gap-1 shrink-0">
                     <NavLink to="/" end className={linkCls}>
                         Tìm phòng
                     </NavLink>
@@ -135,68 +148,92 @@ export default function Navbar() {
                     )}
                 </div>
 
-                <div className="relative" ref={menuRef}>
-                    {isAuthenticated ? (
-                        <>
-                            <button
-                                type="button"
-                                onClick={() => setMenuOpen((o) => !o)}
-                                aria-expanded={menuOpen}
-                                className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-sm transition-colors"
-                            >
-                                <Avatar name={email ?? "?"} size="sm" />
-                                <span className="hidden sm:inline text-on-surface-variant max-w-40 truncate">{email}</span>
-                            </button>
+                {/* Ô tìm kiếm trên màn hình rộng */}
+                <div className="hidden lg:block flex-1 min-w-0 max-w-md">
+                    <SearchBox />
+                </div>
 
-                            {menuOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg py-1.5 text-sm overflow-hidden">
-                                    <Link to="/profile" className={menuItemCls}>
-                                        Hồ sơ cá nhân
-                                    </Link>
-                                    <Link to="/favorites" className={menuItemCls}>
-                                        Phòng yêu thích
-                                    </Link>
-                                    {role === "LANDLORD" && (
-                                        <Link to="/dashboard/houses" className={menuItemCls}>
-                                            Quản lý phòng trọ
+                <div className="ml-auto flex items-center gap-2 shrink-0">
+                    <button
+                        type="button"
+                        onClick={toggleSearch}
+                        aria-label={searchOpen ? "Đóng tìm kiếm" : "Tìm kiếm"}
+                        aria-expanded={searchOpen}
+                        className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low"
+                    >
+                        <span className="material-symbols-outlined">{searchOpen ? "close" : "search"}</span>
+                    </button>
+
+                    <div className="relative" ref={menuRef}>
+                        {isAuthenticated ? (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setMenuOpen((o) => !o)}
+                                    aria-expanded={menuOpen}
+                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-sm transition-colors"
+                                >
+                                    <Avatar name={email ?? "?"} size="sm" />
+                                    <span className="hidden sm:inline text-on-surface-variant max-w-40 truncate">{email}</span>
+                                </button>
+
+                                {menuOpen && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg py-1.5 text-sm overflow-hidden">
+                                        <Link to="/profile" className={menuItemCls}>
+                                            Hồ sơ cá nhân
                                         </Link>
-                                    )}
-                                    {role === "ADMIN" && (
-                                        <Link to="/dashboard/admin/stats" className={menuItemCls}>
-                                            Trang quản trị
+                                        <Link to="/favorites" className={menuItemCls}>
+                                            Phòng yêu thích
                                         </Link>
-                                    )}
-                                    <hr className="my-1 border-outline-variant" />
-                                    <button
-                                        type="button"
-                                        onClick={handleLogout}
-                                        className="w-full text-left px-4 py-2 text-error hover:bg-error-container/40"
-                                    >
-                                        Đăng xuất
-                                    </button>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            <Link
-                                to="/login"
-                                state={{ from: location }}
-                                className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-low"
-                            >
-                                Đăng nhập
-                            </Link>
-                            <Link
-                                to="/register"
-                                state={{ from: location }}
-                                className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary text-on-primary hover:bg-primary-container"
-                            >
-                                Đăng ký
-                            </Link>
-                        </div>
-                    )}
+                                        {role === "LANDLORD" && (
+                                            <Link to="/dashboard/houses" className={menuItemCls}>
+                                                Quản lý phòng trọ
+                                            </Link>
+                                        )}
+                                        {role === "ADMIN" && (
+                                            <Link to="/dashboard/admin/stats" className={menuItemCls}>
+                                                Trang quản trị
+                                            </Link>
+                                        )}
+                                        <hr className="my-1 border-outline-variant" />
+                                        <button
+                                            type="button"
+                                            onClick={handleLogout}
+                                            className="w-full text-left px-4 py-2 text-error hover:bg-error-container/40"
+                                        >
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    to="/login"
+                                    state={{ from: location }}
+                                    className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-low"
+                                >
+                                    Đăng nhập
+                                </Link>
+                                <Link
+                                    to="/register"
+                                    state={{ from: location }}
+                                    className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary text-on-primary hover:bg-primary-container"
+                                >
+                                    Đăng ký
+                                </Link>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
+
+            {/* Thanh tìm kiếm cho màn hình nhỏ */}
+            {searchOpen && (
+                <div className="lg:hidden absolute top-full inset-x-0 bg-surface-container-lowest border-b border-outline-variant shadow-md p-3">
+                    <SearchBox autoFocus onNavigate={() => setSearchOpen(false)} />
+                </div>
+            )}
 
             {/* Menu cho màn hình nhỏ */}
             {mobileOpen && (

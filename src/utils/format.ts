@@ -23,3 +23,9 @@ export function formatMonthYear(iso: string): string {
     const d = new Date(iso);
     return `${d.getMonth() + 1}/${d.getFullYear()}`;
 }
+
+export const roleLabel: Record<string, string> = {
+    TENANT: "Người tìm trọ",
+    LANDLORD: "Chủ trọ",
+    ADMIN: "Quản trị viên",
+};
