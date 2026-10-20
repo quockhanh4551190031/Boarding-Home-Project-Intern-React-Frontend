@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import ThemeToggle from "../ThemeToggle";
 
 const highlights = [
     { icon: "map", title: "Tìm theo khu vực và bản đồ", text: "Lọc theo giá, diện tích, tiện ích và xem đường đi tới nhà trọ." },
@@ -38,8 +39,8 @@ export default function AuthShell({ title, subtitle, footer, children }: Props) 
     return (
         <div className="min-h-screen grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] bg-background">
             <aside className="hidden lg:flex relative overflow-hidden bg-primary-container text-on-primary p-12 flex-col justify-between">
-                <div aria-hidden className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/10" />
-                <div aria-hidden className="absolute -bottom-32 -left-20 w-[28rem] h-[28rem] rounded-full bg-white/5" />
+                <div aria-hidden className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-on-primary/10" />
+                <div aria-hidden className="absolute -bottom-32 -left-20 w-[28rem] h-[28rem] rounded-full bg-on-primary/5" />
 
                 <div className="relative z-10">
                     <Logo onDark />
@@ -60,7 +61,7 @@ export default function AuthShell({ title, subtitle, footer, children }: Props) 
                     <ul className="flex flex-col gap-4">
                         {highlights.map((h) => (
                             <li key={h.icon} className="flex items-start gap-3">
-                                <div className="w-9 h-9 shrink-0 rounded-lg bg-white/15 flex items-center justify-center">
+                                <div className="w-9 h-9 shrink-0 rounded-lg bg-on-primary/15 flex items-center justify-center">
                                     <span className="material-symbols-outlined !text-[20px]">{h.icon}</span>
                                 </div>
                                 <div>
@@ -77,7 +78,10 @@ export default function AuthShell({ title, subtitle, footer, children }: Props) 
                 </p>
             </aside>
 
-            <main className="flex flex-col">
+            <main className="relative flex flex-col">
+                <div className="absolute top-4 right-4 z-10">
+                    <ThemeToggle />
+                </div>
                 <div className="lg:hidden px-6 pt-6">
                     <Logo />
                 </div>

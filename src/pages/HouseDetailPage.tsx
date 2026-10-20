@@ -4,7 +4,7 @@ import { houseApi } from "../api/houseApi";
 import { roomApi } from "../api/roomApi";
 import CopyLinkButton from "../components/CopyLinkButton";
 import ImageGallery from "../components/ImageGallery";
-import LandlordCard from "../components/LandLordCard";
+import LandlordCard from "../components/LandlordCard";
 import RatingLine from "../components/RatingLine";
 import ReviewSection from "../components/ReviewSection";
 import RoomDirectionsMap from "../components/RoomDirectionsMap";

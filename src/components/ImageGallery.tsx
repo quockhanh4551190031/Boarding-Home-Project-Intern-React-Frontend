@@ -55,7 +55,7 @@ export default function ImageGallery({ images, alt }: Props) {
                     <img src={images[current]} alt={alt} className="w-full h-full object-cover" />
                 </button>
 
-                <span className="pointer-events-none absolute top-3 right-3 bg-on-surface/60 text-white text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="pointer-events-none absolute top-3 right-3 bg-scrim/60 text-white text-xs px-2.5 py-1 rounded-full inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="material-symbols-outlined !text-[14px]">zoom_in</span>
                     Xem ảnh lớn
                 </span>
@@ -68,7 +68,7 @@ export default function ImageGallery({ images, alt }: Props) {
                         <button type="button" onClick={next} aria-label="Ảnh sau" className={`${navBtn} right-3`}>
                             <span className="material-symbols-outlined">chevron_right</span>
                         </button>
-                        <span className="absolute bottom-3 right-3 bg-on-surface/70 text-white text-xs font-medium px-2.5 py-1 rounded-full tabular-nums">
+                        <span className="absolute bottom-3 right-3 bg-scrim/70 text-white text-xs font-medium px-2.5 py-1 rounded-full tabular-nums">
                             {current + 1} / {count}
                         </span>
                     </>
@@ -98,7 +98,7 @@ export default function ImageGallery({ images, alt }: Props) {
                         role="dialog"
                         aria-modal="true"
                         aria-label="Xem ảnh"
-                        className="fixed inset-0 z-[110] bg-on-surface/90 flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[110] bg-scrim/90 flex items-center justify-center p-4"
                         onMouseDown={(e) => {
                             if (e.target === e.currentTarget) setLightbox(false);
                         }}
@@ -107,7 +107,7 @@ export default function ImageGallery({ images, alt }: Props) {
                             type="button"
                             onClick={() => setLightbox(false)}
                             aria-label="Đóng"
-                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 text-white hover:bg-white/25 flex items-center justify-center transition-colors"
+                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-on-primary/15 text-white hover:bg-on-primary/25 flex items-center justify-center transition-colors"
                         >
                             <span className="material-symbols-outlined">close</span>
                         </button>
@@ -126,7 +126,7 @@ export default function ImageGallery({ images, alt }: Props) {
                                 <button type="button" onClick={next} aria-label="Ảnh sau" className={`${navBtn} right-4`}>
                                     <span className="material-symbols-outlined">chevron_right</span>
                                 </button>
-                                <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white text-sm tabular-nums bg-white/15 px-3 py-1 rounded-full">
+                                <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white text-sm tabular-nums bg-on-primary/15 px-3 py-1 rounded-full">
                                     {current + 1} / {count}
                                 </span>
                             </>

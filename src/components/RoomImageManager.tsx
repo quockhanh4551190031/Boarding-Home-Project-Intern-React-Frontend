@@ -111,7 +111,7 @@ export default function RoomImageManager({ room, onClose, onUpdated }: Props) {
                 type="button"
                 onClick={() => handleDelete(img.id)}
                 aria-label="Xóa ảnh"
-                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-on-surface/70 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-error"
+                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-scrim/70 text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-error"
               >
                 <span className="material-symbols-outlined !text-[14px]">close</span>
               </button>

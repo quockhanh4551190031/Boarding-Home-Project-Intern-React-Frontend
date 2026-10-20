@@ -211,7 +211,7 @@ export default function ChatbotWidget() {
                     className="fixed bottom-24 right-5 z-50 w-[380px] max-w-[calc(100vw_-_2.5rem)] h-[min(34rem,calc(100dvh_-_10rem))] bg-surface-container-lowest rounded-2xl border border-outline-variant/50 shadow-xl flex flex-col overflow-hidden"
                 >
                     <header className="bg-primary-container text-on-primary px-4 py-3 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-on-primary/15 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined !text-[20px]">smart_toy</span>
                         </div>
                         <div className="min-w-0 flex-1">
@@ -225,7 +225,7 @@ export default function ChatbotWidget() {
                                 disabled={sending}
                                 title="Cuộc trò chuyện mới"
                                 aria-label="Cuộc trò chuyện mới"
-                                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/15 transition-colors disabled:opacity-50"
+                                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-on-primary/15 transition-colors disabled:opacity-50"
                             >
                                 <span className="material-symbols-outlined !text-[20px]">add_comment</span>
                             </button>

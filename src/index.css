@@ -11,6 +11,8 @@
     --color-on-surface-variant: #464555;
     --color-outline: #777587;
     --color-outline-variant: #c7c4d8;
+    --color-inverse-surface: #283044;
+    --color-inverse-on-surface: #eef0ff;
 
     /* Primary */
     --color-primary: #3525cd;
@@ -36,15 +38,79 @@
     --color-background: #faf8ff;
     --color-on-background: #131b2e;
 
+    /* Lớp phủ: nền mờ của modal, chú thích đè lên ảnh */
+    --color-scrim: #131b2e;
+
     --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
     --radius-DEFAULT: 0.25rem;
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
+}
 
-    --color-inverse-surface: #283044;
-    --color-inverse-on-surface: #eef0ff;
+:root {
+    color-scheme: light;
+}
+
+/* ===== Giao diện tối ===== */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Thẻ (lowest) sáng hơn nền trang; các bậc container tăng dần độ sáng */
+    --color-background: #0f111a;
+    --color-on-background: #e3e4f2;
+    --color-surface: #0f111a;
+    --color-surface-container-lowest: #171a27;
+    --color-surface-container-low: #1e2231;
+    --color-surface-container: #262b3d;
+    --color-surface-container-high: #30364a;
+    --color-on-surface: #e3e4f2;
+    --color-on-surface-variant: #b6b9cf;
+    --color-outline: #8a8da6;
+    --color-outline-variant: #434961;
+    --color-inverse-surface: #e3e4f2;
+    --color-inverse-on-surface: #1a1c2a;
+
+    /* Tông sáng + chữ đậm để đủ tương phản trên nền tối */
+    --color-primary: #aeabff;
+    --color-on-primary: #14106e;
+    --color-primary-container: #8e8aff;
+    --color-on-primary-container: #1e1a78;
+    --color-primary-fixed: #2b2870;
+    --color-on-primary-fixed-variant: #cdcbff;
+
+    --color-secondary: #b9c7e0;
+    --color-secondary-container: #2d3853;
+    --color-on-secondary-container: #cbd7ef;
+    --color-tertiary-container: #6b2f0a;
+    --color-on-tertiary-container: #ffd2be;
+
+    --color-error: #ffb4ab;
+    --color-on-error: #690005;
+    --color-error-container: #6d1b21;
+    --color-on-error-container: #ffdad6;
+
+    --color-scrim: #000000;
+
+    /* Màu cứng của Tailwind: nền nhạt thành nền tối, chữ đậm thành chữ sáng */
+    --color-emerald-50: #0c2a22;
+    --color-emerald-100: #113a2e;
+    --color-emerald-200: #1a5a45;
+    --color-emerald-700: #6ee7b7;
+    --color-emerald-800: #a7f3d0;
+
+    --color-amber-50: #2b2210;
+    --color-amber-100: #3a2d11;
+    --color-amber-200: #5a4414;
+    --color-amber-700: #fcd34d;
+
+    --color-rose-100: #4a1c26;
+    --color-rose-700: #fda4af;
+}
+
+html {
+    background-color: var(--color-background);
 }
 
 body {
@@ -56,4 +122,37 @@ body {
     font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
     font-size: 20px;
     line-height: 1;
+}
+
+/* ===== Bản đồ Leaflet ở giao diện tối ===== */
+:root[data-theme="dark"] .leaflet-container {
+    background: #1b1f2e;
+}
+
+:root[data-theme="dark"] .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.88) saturate(0.7);
+}
+
+:root[data-theme="dark"] .leaflet-bar a {
+    background-color: var(--color-surface-container-lowest);
+    color: var(--color-on-surface);
+    border-bottom-color: var(--color-outline-variant);
+}
+
+:root[data-theme="dark"] .leaflet-bar a:hover {
+    background-color: var(--color-surface-container-low);
+}
+
+:root[data-theme="dark"] .leaflet-control-attribution {
+    background: color-mix(in srgb, var(--color-surface-container-lowest) 80%, transparent);
+    color: var(--color-on-surface-variant);
+}
+
+:root[data-theme="dark"] .leaflet-control-attribution a {
+    color: var(--color-primary-container);
+}
+
+/* Đường chỉ đường đổi màu theo giao diện */
+.route-line {
+    stroke: var(--color-primary-container, #4f46e5);
 }

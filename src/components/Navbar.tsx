@@ -6,6 +6,7 @@ import { useUnreadPolling } from "../hooks/useUnreadPolling";
 import Avatar from "./ui/Avatar";
 import LocationPickerModal from "./LocationPickerModal";
 import SearchBox from "./SearchBox";
+import ThemeToggle from "./ThemeToggle";
 
 const baseLink = "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5";
 const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -163,6 +164,8 @@ export default function Navbar() {
                     >
                         <span className="material-symbols-outlined">{searchOpen ? "close" : "search"}</span>
                     </button>
+
+                    <ThemeToggle />
 
                     <div className="relative" ref={menuRef}>
                         {isAuthenticated ? (

@@ -46,7 +46,7 @@ export default function CallButton({ phone, masked, onLogin }: Props) {
             </div>
             <a
                 href={`tel:${dial}`}
-                className="h-10 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm inline-flex items-center justify-center gap-1.5"
+                className="h-10 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:brightness-110 transition shadow-sm inline-flex items-center justify-center gap-1.5"
             >
                 <span className="material-symbols-outlined !text-[18px]">call</span>
                 Gọi ngay

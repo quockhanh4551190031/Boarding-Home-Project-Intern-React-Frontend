@@ -48,7 +48,7 @@ export default function Modal({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-on-surface/20 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-scrim/40 backdrop-blur-[2px]"
             onMouseDown={(e) => {
                 if (closeOnBackdrop && dismissible && e.target === e.currentTarget) onClose();
             }}

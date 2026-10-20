@@ -129,7 +129,7 @@ export default function RoomDirectionsMap({ destLat, destLng }: Props) {
           <InvalidateSizeOnMount />
           <Marker position={destination} />
           {userPos && <Marker position={userPos} />}
-          {routeCoords.length > 0 && <Polyline positions={routeCoords} color="#4f46e5" weight={5} />}
+          {routeCoords.length > 0 && <Polyline positions={routeCoords} color="#4f46e5" weight={5} className="route-line" />}
           <FitBounds positions={boundsPositions} />
         </MapContainer>
       </div>
