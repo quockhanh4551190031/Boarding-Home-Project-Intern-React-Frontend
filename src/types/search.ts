@@ -1,4 +1,13 @@
-import type { PublicHouseItem } from "./user";
+export interface PostSearchItem {
+    id: number;
+    title: string;
+    snippet: string;
+    authorId: number;
+    authorName: string;
+    likeCount: number;
+    commentCount: number;
+    createdAt: string;
+}
 
 export interface UserSearchItem {
     id: number;
@@ -7,6 +16,6 @@ export interface UserSearchItem {
 }
 
 export interface SearchResult {
-    houses: PublicHouseItem[];
+    posts: PostSearchItem[];
     users: UserSearchItem[];
 }

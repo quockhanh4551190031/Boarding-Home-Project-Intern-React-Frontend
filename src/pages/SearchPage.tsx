@@ -3,12 +3,14 @@ import { Link, useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/searchApi";
 import Badge from "../components/ui/Badge";
 import type { BadgeTone } from "../components/ui/Badge";
+import Highlight from "../components/ui/Highlight";
 import PageHeader from "../components/ui/PageHeader";
 import { UserAvatarLink, UserNameLink } from "../components/ui/UserLink";
 import { btnSecondary, btnSmSecondary, sectionCardCls } from "../components/ui/styles";
 import { useAuthStore } from "../store/authStore";
 import { useLoginRedirect } from "../hooks/useAuthRedirect";
-import { formatPrice, roleLabel } from "../utils/format";
+import { roleLabel } from "../utils/format";
+import { timeAgo } from "../utils/time";
 import type { SearchResult } from "../types/search";
 
 const LIMIT = 20;
@@ -70,9 +72,9 @@ export default function SearchPage() {
     const header = (
         <PageHeader
             eyebrow="Tìm kiếm"
-            note={q.length >= MIN_LENGTH ? "Theo tên" : undefined}
+            note={q.length >= MIN_LENGTH ? "Bài viết và người dùng" : undefined}
             title={q.length >= MIN_LENGTH ? `Kết quả cho "${q}"` : "Tìm kiếm"}
-            description="Tìm nhà trọ và người dùng theo tên."
+            description="Tìm bài viết trên diễn đàn (theo tiêu đề, nội dung) và người dùng (theo tên)."
         />
     );
 
@@ -83,7 +85,9 @@ export default function SearchPage() {
                 <div className={`${sectionCardCls} py-14 flex flex-col items-center gap-2 text-center`}>
                     <span className="material-symbols-outlined !text-[40px] text-outline">search</span>
                     <p className="font-medium text-on-surface">Nhập từ khóa để bắt đầu tìm kiếm</p>
-                    <p className="text-sm text-on-surface-variant">Dùng ô tìm kiếm trên thanh điều hướng, tối thiểu {MIN_LENGTH} ký tự.</p>
+                    <p className="text-sm text-on-surface-variant">
+                        Dùng ô tìm kiếm trên thanh điều hướng, tối thiểu {MIN_LENGTH} ký tự.
+                    </p>
                 </div>
             </div>
         );
@@ -93,9 +97,9 @@ export default function SearchPage() {
         return (
             <div className="max-w-5xl mx-auto px-4 py-8">
                 {header}
-                <div className="grid sm:grid-cols-2 gap-4 animate-pulse">
+                <div className="space-y-3 animate-pulse">
                     {Array.from({ length: 4 }, (_, i) => (
-                        <div key={i} className="h-28 bg-surface-container rounded-xl" />
+                        <div key={i} className="h-24 bg-surface-container rounded-xl" />
                     ))}
                 </div>
             </div>
@@ -117,14 +121,14 @@ export default function SearchPage() {
         );
     }
 
-    const { houses, users } = result;
+    const { posts, users } = result;
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
             {header}
 
             <div className={`flex flex-col gap-6 ${loading ? "opacity-60 transition-opacity" : ""}`}>
-                {houses.length === 0 && users.length === 0 && (
+                {posts.length === 0 && users.length === 0 && (
                     <div className={`${sectionCardCls} py-14 flex flex-col items-center gap-2 text-center`}>
                         <span className="material-symbols-outlined !text-[40px] text-outline">search_off</span>
                         <p className="font-medium text-on-surface">Không tìm thấy kết quả cho "{q}"</p>
@@ -132,42 +136,40 @@ export default function SearchPage() {
                     </div>
                 )}
 
-                {houses.length > 0 && (
+                {posts.length > 0 && (
                     <section className={sectionCardCls}>
-                        <SectionTitle icon="home_work" title="Nhà trọ" count={houses.length} />
-                        <div className="grid sm:grid-cols-2 gap-3">
-                            {houses.map((h) => (
-                                <Link
-                                    key={h.id}
-                                    to={`/houses/${h.id}`}
-                                    className="group flex gap-3 p-2.5 rounded-xl border border-outline-variant/50 hover:border-primary-container hover:shadow-sm transition-all"
-                                >
-                                    <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-surface-container-low flex items-center justify-center">
-                                        {h.thumbnail ? (
-                                            <img
-                                                src={h.thumbnail}
-                                                alt=""
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        ) : (
-                                            <span className="material-symbols-outlined text-outline">image</span>
-                                        )}
-                                    </div>
-                                    <div className="min-w-0 flex flex-col justify-center gap-0.5">
-                                        <p className="font-semibold text-sm text-on-surface line-clamp-1">{h.name}</p>
-                                        <p className="text-xs text-on-surface-variant line-clamp-1">{h.location}</p>
-                                        <p className="text-xs text-on-surface-variant tabular-nums">
-                                            {h.roomCount} phòng · {h.availableRoomCount} còn trống
-                                        </p>
-                                        {h.minPrice !== null && (
-                                            <p className="text-sm font-bold text-primary-container tabular-nums">
-                                                Từ {formatPrice(h.minPrice)} đ
+                        <SectionTitle icon="forum" title="Bài viết" count={posts.length} />
+                        <ul className="flex flex-col gap-3">
+                            {posts.map((p) => (
+                                <li key={p.id}>
+                                    <Link
+                                        to={`/forum/${p.id}`}
+                                        className="block p-4 rounded-xl border border-outline-variant/50 hover:border-primary-container hover:shadow-sm transition-all"
+                                    >
+                                        <h3 className="font-semibold text-on-surface break-words">
+                                            <Highlight text={p.title} query={q} />
+                                        </h3>
+                                        {p.snippet && (
+                                            <p className="text-sm text-on-surface-variant line-clamp-2 mt-1 break-words">
+                                                <Highlight text={p.snippet} query={q} />
                                             </p>
                                         )}
-                                    </div>
-                                </Link>
+                                        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-on-surface-variant">
+                                            <span>{p.authorName}</span>
+                                            <span>{timeAgo(p.createdAt)}</span>
+                                            <span className="inline-flex items-center gap-1 tabular-nums">
+                                                <span className="material-symbols-outlined !text-[14px]">favorite</span>
+                                                {p.likeCount}
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 tabular-nums">
+                                                <span className="material-symbols-outlined !text-[14px]">chat_bubble</span>
+                                                {p.commentCount}
+                                            </span>
+                                        </p>
+                                    </Link>
+                                </li>
                             ))}
-                        </div>
+                        </ul>
                     </section>
                 )}
 
@@ -180,7 +182,7 @@ export default function SearchPage() {
                                     <UserAvatarLink userId={u.id} name={u.name} size="lg" />
                                     <div className="min-w-0 flex-1">
                                         <UserNameLink userId={u.id} className="block font-semibold text-on-surface truncate">
-                                            {u.name}
+                                            <Highlight text={u.name} query={q} />
                                         </UserNameLink>
                                         <Badge tone={roleTone[u.role] ?? "neutral"}>{roleLabel[u.role]}</Badge>
                                     </div>

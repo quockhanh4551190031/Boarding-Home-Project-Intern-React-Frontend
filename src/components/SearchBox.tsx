@@ -3,7 +3,9 @@ import type { KeyboardEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { searchApi } from "../api/searchApi";
 import Avatar from "./ui/Avatar";
+import Highlight from "./ui/Highlight";
 import { roleLabel } from "../utils/format";
+import { timeAgo } from "../utils/time";
 import type { SearchResult } from "../types/search";
 
 const MIN_LENGTH = 2;
@@ -92,7 +94,7 @@ export default function SearchBox({ autoFocus = false, onNavigate }: Props) {
     const items = useMemo(() => {
         if (!result) return [];
         return [
-            ...result.houses.map((h) => ({ key: `h-${h.id}`, to: `/houses/${h.id}` })),
+            ...result.posts.map((p) => ({ key: `p-${p.id}`, to: `/forum/${p.id}` })),
             ...result.users.map((u) => ({ key: `u-${u.id}`, to: `/users/${u.id}` })),
         ];
     }, [result]);
@@ -141,7 +143,7 @@ export default function SearchBox({ autoFocus = false, onNavigate }: Props) {
         }
     };
 
-    const houseCount = result?.houses.length ?? 0;
+    const postCount = result?.posts.length ?? 0;
 
     return (
         <div ref={wrapRef} className="relative w-full">
@@ -156,12 +158,12 @@ export default function SearchBox({ autoFocus = false, onNavigate }: Props) {
                 aria-controls={listId}
                 aria-autocomplete="list"
                 aria-activedescendant={activeId}
-                aria-label="Tìm nhà trọ hoặc người dùng"
+                aria-label="Tìm bài viết hoặc người dùng"
                 autoComplete="off"
                 enterKeyHint="search"
                 maxLength={50}
                 autoFocus={autoFocus}
-                placeholder="Tìm nhà trọ, người dùng..."
+                placeholder="Tìm bài viết, người dùng..."
                 className="w-full h-10 pl-9 pr-9 bg-surface-container-low focus:bg-surface-container-lowest rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                 value={query}
                 onChange={(e) => {
@@ -206,30 +208,28 @@ export default function SearchBox({ autoFocus = false, onNavigate }: Props) {
                     ) : result && hasItems ? (
                         <div className={busy ? "opacity-60 transition-opacity" : ""}>
                             <ul role="listbox" aria-label="Kết quả tìm kiếm" className="max-h-[24rem] overflow-y-auto py-1">
-                                {result.houses.length > 0 && (
+                                {result.posts.length > 0 && (
                                     <li role="presentation" className={headingCls}>
-                                        Nhà trọ
+                                        Bài viết
                                     </li>
                                 )}
-                                {result.houses.map((h, i) => (
-                                    <li key={h.id} role="option" id={`${listId}-h-${h.id}`} aria-selected={active === i}>
+                                {result.posts.map((p, i) => (
+                                    <li key={p.id} role="option" id={`${listId}-p-${p.id}`} aria-selected={active === i}>
                                         <Link
-                                            to={`/houses/${h.id}`}
+                                            to={`/forum/${p.id}`}
                                             onClick={finish}
                                             onMouseEnter={() => setActive(i)}
                                             className={rowCls(active === i)}
                                         >
-                                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-low shrink-0 flex items-center justify-center">
-                                                {h.thumbnail ? (
-                                                    <img src={h.thumbnail} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <span className="material-symbols-outlined !text-[20px] text-outline">home_work</span>
-                                                )}
+                                            <div className="w-10 h-10 rounded-lg bg-primary-fixed text-on-primary-fixed-variant shrink-0 flex items-center justify-center">
+                                                <span className="material-symbols-outlined !text-[20px]">forum</span>
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-sm font-medium text-on-surface truncate">{h.name}</p>
+                                                <p className="text-sm font-medium text-on-surface truncate">
+                                                    <Highlight text={p.title} query={debounced} />
+                                                </p>
                                                 <p className="text-xs text-on-surface-variant truncate">
-                                                    {h.location} · {h.roomCount} phòng
+                                                    {p.authorName} · {timeAgo(p.createdAt)}
                                                 </p>
                                             </div>
                                         </Link>
@@ -242,7 +242,7 @@ export default function SearchBox({ autoFocus = false, onNavigate }: Props) {
                                     </li>
                                 )}
                                 {result.users.map((u, j) => {
-                                    const idx = houseCount + j;
+                                    const idx = postCount + j;
                                     return (
                                         <li key={u.id} role="option" id={`${listId}-u-${u.id}`} aria-selected={active === idx}>
                                             <Link
@@ -253,7 +253,9 @@ export default function SearchBox({ autoFocus = false, onNavigate }: Props) {
                                             >
                                                 <Avatar name={u.name} size="md" tone="muted" />
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-on-surface truncate">{u.name}</p>
+                                                    <p className="text-sm font-medium text-on-surface truncate">
+                                                        <Highlight text={u.name} query={debounced} />
+                                                    </p>
                                                     <p className="text-xs text-on-surface-variant">{roleLabel[u.role]}</p>
                                                 </div>
                                             </Link>
