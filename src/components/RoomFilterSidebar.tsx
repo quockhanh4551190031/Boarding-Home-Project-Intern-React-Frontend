@@ -6,13 +6,14 @@ import type { Amenity, RoomSearchParams } from "../types/room";
 interface Props {
     filters: RoomSearchParams;
     onChange: (filters: RoomSearchParams) => void;
+    sortLocked?: boolean;
 }
 
 const inputCls =
     "w-full h-10 px-3 bg-surface-container-low focus:bg-surface-container-lowest rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed";
 const labelCls = "text-sm font-medium text-on-surface block mb-1.5";
 
-export default function RoomFilterSidebar({ filters, onChange }: Props) {
+export default function RoomFilterSidebar({ filters, onChange, sortLocked = false }: Props) {
     const [amenities, setAmenities] = useState<Amenity[]>([]);
     const [provinces, setProvinces] = useState<string[]>([]);
     const [wards, setWards] = useState<string[]>([]);
@@ -177,9 +178,10 @@ export default function RoomFilterSidebar({ filters, onChange }: Props) {
             )}
 
             <div>
-                <label className={`${labelCls} select-none`}>Sắp xếp</label>
+                <label className={labelCls}>Sắp xếp</label>
                 <select
                     className={inputCls}
+                    disabled={sortLocked}
                     value={local.sortBy ?? "NEWEST"}
                     onChange={(e) => setLocal({ ...local, sortBy: e.target.value as RoomSearchParams["sortBy"] })}
                 >
@@ -189,6 +191,9 @@ export default function RoomFilterSidebar({ filters, onChange }: Props) {
                     <option value="AREA_ASC">Diện tích nhỏ đến lớn</option>
                     <option value="AREA_DESC">Diện tích lớn đến nhỏ</option>
                 </select>
+                {sortLocked && (
+                    <p className="mt-1.5 text-xs text-on-surface-variant">Đang sắp xếp theo khoảng cách vì bật "Gần tôi".</p>
+                )}
             </div>
 
             <div className="flex gap-2 pt-1">

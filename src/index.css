@@ -156,3 +156,67 @@ body {
 .route-line {
     stroke: var(--color-primary-container, #4f46e5);
 }
+
+/* ===== Bản đồ nhà trọ ===== */
+.house-pin-wrap {
+    background: none !important;
+    border: none !important;
+}
+
+.house-pin {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, calc(-100% - 6px));
+    white-space: nowrap;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    background: var(--color-primary-container);
+    color: var(--color-on-primary);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+    cursor: pointer;
+}
+
+.house-pin::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--color-primary-container);
+    border-bottom: 0;
+}
+
+.user-dot {
+    fill: var(--color-primary-container);
+    stroke: var(--color-surface-container-lowest);
+}
+
+.map-radius {
+    fill: var(--color-primary-container);
+    stroke: var(--color-primary-container);
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background: var(--color-surface-container-lowest);
+    color: var(--color-on-surface);
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 0.75rem;
+}
+
+.leaflet-popup-content {
+    margin: 12px;
+    font-family: var(--font-sans);
+}
+
+.leaflet-container .house-popup a {
+    color: var(--color-primary-container);
+}
