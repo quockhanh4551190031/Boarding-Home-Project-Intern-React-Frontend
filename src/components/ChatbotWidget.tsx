@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { chatbotApi } from "../api/chatbotApi";
 import { useAuthStore } from "../store/authStore";
 import type { Room } from "../types/room";
+import { apiRetryAfter } from "../utils/apiError";
 
 const HIDDEN_ROUTES = ["/login", "/register", "/chat"];
 
@@ -21,6 +22,7 @@ interface DisplayMessage {
     suggestedRooms?: Room[];
     isError?: boolean;
     retryText?: string;
+    retryAt?: number;
 }
 
 let idCounter = 1;
@@ -138,6 +140,15 @@ export default function ChatbotWidget() {
         return () => document.removeEventListener("keydown", onKey);
     }, [open]);
 
+    const [now, setNow] = useState(() => Date.now());
+    const hasPendingRetry = messages.some((m) => m.retryAt !== undefined && m.retryAt > now);
+
+    useEffect(() => {
+        if (!hasPendingRetry) return;
+        const timer = window.setInterval(() => setNow(Date.now()), 1000);
+        return () => window.clearInterval(timer);
+    }, [hasPendingRetry]);
+
     if (HIDDEN_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return null;
 
     const deliver = async (text: string) => {
@@ -152,13 +163,38 @@ export default function ChatbotWidget() {
             ]);
         } catch (err: any) {
             const status = err.response?.status;
-            const content = !err.response
-                ? "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại."
-                : status === 503
-                    ? (err.response.data?.message as string | undefined) ??
-                    "Hệ thống chatbot đang quá tải, vui lòng thử lại sau ít phút."
-                    : "Xin lỗi, mình đang gặp sự cố. Bạn thử lại sau nhé.";
-            setMessages((prev) => [...prev, { id: newId(), role: "BOT", content, isError: true, retryText: text }]);
+            const retryAfter = apiRetryAfter(err);
+            const serverMessage = err.response?.data?.message as string | undefined;
+
+            let content: string;
+            let canRetry = true;
+
+            if (!err.response) {
+                content = "Không kết nối được tới máy chủ. Kiểm tra mạng rồi thử lại.";
+            } else if (status === 429) {
+                content = serverMessage ?? "Bạn gửi quá nhiều tin. Vui lòng thử lại sau ít phút.";
+                // Chờ lâu (hết lượt trong ngày) thì không có nút thử lại
+                canRetry = retryAfter !== null && retryAfter <= 120;
+            } else if (status === 400) {
+                content = serverMessage ?? "Tin nhắn không hợp lệ.";
+                canRetry = false;
+            } else if (status === 503) {
+                content = serverMessage ?? "Hệ thống chatbot đang quá tải, vui lòng thử lại sau ít phút.";
+            } else {
+                content = "Xin lỗi, mình đang gặp sự cố. Bạn thử lại sau nhé.";
+            }
+
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: newId(),
+                    role: "BOT",
+                    content,
+                    isError: true,
+                    retryText: canRetry ? text : undefined,
+                    retryAt: status === 429 && canRetry && retryAfter ? Date.now() + retryAfter * 1000 : undefined,
+                },
+            ]);
         } finally {
             setSending(false);
         }
@@ -183,6 +219,9 @@ export default function ChatbotWidget() {
         setMessages((prev) => prev.filter((m) => m.id !== errorId));
         void deliver(text);
     };
+
+    const waitLeft = (m: DisplayMessage) =>
+        m.retryAt ? Math.max(0, Math.ceil((m.retryAt - now) / 1000)) : 0;
 
     const startNew = () => {
         if (sending) return;
@@ -281,11 +320,11 @@ export default function ChatbotWidget() {
                                                     <button
                                                         type="button"
                                                         onClick={() => handleRetry(msg.id, msg.retryText!)}
-                                                        disabled={sending}
-                                                        className="mt-2 text-xs font-semibold underline disabled:opacity-50 inline-flex items-center gap-1"
+                                                        disabled={sending || waitLeft(msg) > 0}
+                                                        className="mt-2 text-xs font-semibold underline disabled:opacity-50 disabled:no-underline inline-flex items-center gap-1"
                                                     >
                                                         <span className="material-symbols-outlined !text-[14px]">refresh</span>
-                                                        Thử lại
+                                                        {waitLeft(msg) > 0 ? `Thử lại sau ${waitLeft(msg)} giây` : "Thử lại"}
                                                     </button>
                                                 )}
                                             </div>
@@ -353,6 +392,7 @@ export default function ChatbotWidget() {
                                 onChange={(e) => setInput(e.target.value)}
                                 placeholder="Nhập tin nhắn..."
                                 aria-label="Nhập tin nhắn"
+                                maxLength={500}
                                 className="flex-1 h-10 px-4 bg-surface-container-low focus:bg-surface-container-lowest rounded-full text-sm text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                             />
                             <button

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
@@ -8,7 +8,9 @@ import AuthInput from "../components/auth/AuthInput";
 import PasswordField from "../components/auth/PasswordField";
 import { alertErrorCls, btnPrimaryLg } from "../components/ui/styles";
 import { useAuthRedirectTarget } from "../hooks/useAuthRedirect";
-import { apiErrorMessage } from "../utils/apiError";
+import { useCountdown } from "../hooks/useCountdown";
+import { apiErrorMessage, apiRetryAfter } from "../utils/apiError";
+import { formatCountdown } from "../utils/format";
 import type { AuthResponse, LoginRequest } from "../types/auth";
 
 export default function LoginPage() {
@@ -22,14 +24,29 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const { remaining, start } = useCountdown();
+    const wasLocked = useRef(false);
+
+    // Hết thời gian khóa thì xóa thông báo lỗi cũ
+    useEffect(() => {
+        if (remaining > 0) {
+            wasLocked.current = true;
+        } else if (wasLocked.current) {
+            wasLocked.current = false;
+            setError(null);
+        }
+    }, [remaining]);
 
     if (isAuthenticated) return <Navigate to={target} replace />;
 
+    const locked = remaining > 0;
     const sessionEnded = searchParams.get("reason") === "session";
     const needsLogin = target !== "/";
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        if (locked) return;
+
         setError(null);
         setLoading(true);
         const payload: LoginRequest = { email: email.trim(), password };
@@ -38,6 +55,8 @@ export default function LoginPage() {
             setAuth(res.data); // isAuthenticated đổi, trang tự chuyển hướng
         } catch (err) {
             setError(apiErrorMessage(err, "Email hoặc mật khẩu không đúng"));
+            const wait = apiRetryAfter(err);
+            if (wait) start(wait);
             setLoading(false);
         }
     };
@@ -92,8 +111,12 @@ export default function LoginPage() {
                     onChange={setPassword}
                 />
 
-                <button type="submit" disabled={loading} className={btnPrimaryLg}>
-                    {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                <button type="submit" disabled={loading || locked} className={btnPrimaryLg}>
+                    {locked
+                        ? `Thử lại sau ${formatCountdown(remaining)}`
+                        : loading
+                            ? "Đang đăng nhập..."
+                            : "Đăng nhập"}
                 </button>
             </form>
         </AuthShell>

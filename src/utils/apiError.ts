@@ -7,3 +7,10 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
     }
     return e.response.data?.message ?? fallback;
 }
+
+/** Số giây phải chờ do máy chủ trả về cùng lỗi 429 (nếu có). */
+export function apiRetryAfter(err: unknown): number | null {
+    const e = err as AxiosError<{ retryAfterSeconds?: number }>;
+    const n = e?.response?.data?.retryAfterSeconds;
+    return typeof n === "number" && n > 0 ? n : null;
+}
