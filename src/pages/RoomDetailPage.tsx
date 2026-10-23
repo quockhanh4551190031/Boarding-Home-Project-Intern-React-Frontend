@@ -17,6 +17,7 @@ import { apiErrorMessage } from "../utils/apiError";
 import { formatPrice } from "../utils/format";
 import type { ReviewSummary } from "../types/review";
 import type { Room } from "../types/room";
+import ViewingPanel from "../components/ViewingPanel";
 
 const FILLED = '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 20';
 
@@ -187,6 +188,8 @@ export default function RoomDetailPage() {
             )}
 
             {actionError && <div className={alertErrorCls}>{actionError}</div>}
+
+            <ViewingPanel roomId={room.id} roomTitle={room.title} />
 
             <button
               onClick={toggleFavorite}

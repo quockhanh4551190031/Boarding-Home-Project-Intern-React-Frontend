@@ -1,12 +1,21 @@
 import { NavLink } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import { useViewingStore } from "../store/viewingStore";
 
-const landlordLinks = [
+interface SidebarLink {
+    to: string;
+    label: string;
+    icon: string;
+    badge?: boolean;
+}
+
+const landlordLinks: SidebarLink[] = [
     { to: "/dashboard/houses", label: "Nhà trọ của tôi", icon: "home_work" },
     { to: "/dashboard/rooms", label: "Phòng trọ", icon: "meeting_room" },
+    { to: "/dashboard/viewings", label: "Yêu cầu xem phòng", icon: "event", badge: true },
 ];
 
-const adminLinks = [
+const adminLinks: SidebarLink[] = [
     { to: "/dashboard/admin/stats", label: "Thống kê", icon: "bar_chart" },
     { to: "/dashboard/admin/users", label: "Người dùng", icon: "group" },
     { to: "/dashboard/admin/posts", label: "Bài đăng diễn đàn", icon: "forum" },
@@ -16,6 +25,7 @@ const adminLinks = [
 
 export default function Sidebar() {
     const role = useAuthStore((state) => state.role);
+    const pending = useViewingStore((s) => s.pending);
     const links = role === "ADMIN" ? adminLinks : landlordLinks;
 
     return (
@@ -38,6 +48,14 @@ export default function Sidebar() {
                         >
                             <span className="material-symbols-outlined !text-[20px]">{link.icon}</span>
                             {link.label}
+                            {link.badge && pending > 0 && (
+                                <span
+                                    aria-label={`${pending} yêu cầu đang chờ`}
+                                    className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-error text-on-error text-[11px] font-bold flex items-center justify-center tabular-nums"
+                                >
+                                    {pending > 99 ? "99+" : pending}
+                                </span>
+                            )}
                         </NavLink>
                     ))}
                 </nav>

@@ -24,6 +24,8 @@ import AdminReviewsPage from "./pages/dashboard/AdminReviewsPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import PhoneRequiredGate from "./components/PhoneRequiredGate";
 import SearchPage from "./pages/SearchPage";
+import MyViewingsPage from "./pages/MyViewingsPage";
+import LandlordViewingsPage from "./pages/dashboard/LandlordViewingsPage";
 
 export default function App() {
     return (
@@ -47,6 +49,7 @@ export default function App() {
                     <Route element={<ProtectedRoute />}>
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/favorites" element={<FavoritesPage />} />
+                        <Route path="/viewings" element={<MyViewingsPage />} />
                         <Route path="/chat" element={<ChatPage />} />
                     </Route>
                 </Route>
@@ -56,6 +59,7 @@ export default function App() {
                     <Route element={<DashboardLayout />}>
                         <Route path="/dashboard/houses" element={<LandlordHousesPage />} />
                         <Route path="/dashboard/rooms" element={<LandlordRoomsPage />} />
+                        <Route path="/dashboard/viewings" element={<LandlordViewingsPage />} />
                     </Route>
                 </Route>
 

@@ -7,6 +7,8 @@ import Avatar from "./ui/Avatar";
 import LocationPickerModal from "./LocationPickerModal";
 import SearchBox from "./SearchBox";
 import ThemeToggle from "./ThemeToggle";
+import { useViewingStore } from "../store/viewingStore";
+import { useViewingPolling } from "../hooks/useViewingPolling";
 
 const baseLink = "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5";
 const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -38,6 +40,8 @@ export default function Navbar() {
     const unread = useUnreadStore((s) => s.count);
 
     useUnreadPolling(location.pathname.startsWith("/chat"));
+    useViewingPolling();
+    const pendingViewings = useViewingStore((s) => s.pending);
 
     const [menuOpen, setMenuOpen] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -174,8 +178,11 @@ export default function Navbar() {
                                     type="button"
                                     onClick={() => setMenuOpen((o) => !o)}
                                     aria-expanded={menuOpen}
-                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-sm transition-colors"
+                                    className="relative flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-sm transition-colors"
                                 >
+                                    {pendingViewings > 0 && (
+                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-error ring-2 ring-surface-container-lowest" />
+                                    )}
                                     <Avatar name={email ?? "?"} size="sm" />
                                     <span className="hidden sm:inline text-on-surface-variant max-w-40 truncate">{email}</span>
                                 </button>
@@ -188,6 +195,21 @@ export default function Navbar() {
                                         <Link to="/favorites" className={menuItemCls}>
                                             Phòng yêu thích
                                         </Link>
+                                        {role !== "ADMIN" && (
+                                            <Link to="/viewings" className={menuItemCls}>
+                                                Lịch hẹn của tôi
+                                            </Link>
+                                        )}
+                                        {role === "LANDLORD" && (
+                                            <Link to="/dashboard/viewings" className={menuItemCls}>
+                                                Yêu cầu xem phòng
+                                                {pendingViewings > 0 && (
+                                                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-error text-on-error text-[11px] font-bold flex items-center justify-center tabular-nums">
+                                                        {pendingViewings > 99 ? "99+" : pendingViewings}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        )}
                                         {role === "LANDLORD" && (
                                             <Link to="/dashboard/houses" className={menuItemCls}>
                                                 Quản lý phòng trọ
